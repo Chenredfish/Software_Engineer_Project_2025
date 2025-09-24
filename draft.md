@@ -119,3 +119,5 @@ API 串接:
 *管理員管理子系統（原本沒有）
 
 需求規格書：https://changgunguniversity-my.sharepoint.com/:w:/g/personal/b1229057_cgu_edu_tw/Ed1hJj-6NkBGhOO6YuyWL28BcWrLhIGIuIpt6Ads8QMv9A?e=cyw9pN
+
+網站 figma：https://www.figma.com/design/YtWDINtoqmA06v2gOiLmSu/%E5%A8%81%E7%A7%80%E5%BD%B1%E5%9F%8E%E7%B6%B2%E7%AB%99?node-id=3-143&m=dev&t=U1H7MWPLPDRLNtYR-1
