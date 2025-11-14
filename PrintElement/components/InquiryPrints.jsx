@@ -9,12 +9,13 @@ export function ReturnInquiry({ records = [] }) {
         <div className="space-y-2">
           {records.map((r, i) => (
             <div key={i} className="border rounded p-2">
-              <KeyValue label="日期" value={r.date} />
-              <KeyValue label="影城/場次" value={`${r.theater} / ${r.showing}`} />
+              <KeyValue label="訂票日期" value={r.date} />
+              <KeyValue label="訂票狀態" value={r.status} />
+              <KeyValue label="影城" value={r.theater} />
               <KeyValue label="電影" value={r.movie} />
+              <KeyValue label="場次" value={r.showing} />
               <KeyValue label="座位" value={(r.seats || []).join("、")} />
               <KeyValue label="訂票序號" value={r.code} />
-              <KeyValue label="狀態" value={r.status} />
             </div>
           ))}
         </div>}

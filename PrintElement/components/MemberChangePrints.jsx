@@ -8,9 +8,11 @@ export function ShowMemberInfo({ profile }) {
     <InfoCard title="會員資料">
       {profile ? (
         <div>
-          <KeyValue label="姓名" value={p.name} />
-          <KeyValue label="Email" value={p.email} />
-          <KeyValue label="電話" value={p.phone} />
+          <KeyValue label="您的姓名" value={p.name} />
+          <KeyValue label="西元出生日期" value={p.birth} />
+          <KeyValue label="手機號碼" value={p.phone} />
+          <KeyValue label="身份證字號" value={p.id} />
+          <KeyValue label="電子信箱" value={p.email} />
           <KeyValue label="儲值餘額" value={p.balance != null ? `$${p.balance}` : "—"} />
         </div>
       ) : <div className="text-gray-500">尚無資料</div>}

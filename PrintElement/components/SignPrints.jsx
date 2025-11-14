@@ -32,11 +32,11 @@ export function ShowSign({ profile }) {
     <InfoCard title="註冊資訊">
       {profile ? (
         <div>
-          <KeyValue label="姓名" value={profile.name} />
-          <KeyValue label="Email" value={profile.email} />
+          <KeyValue label="您的姓名" value={profile.name} />
+          <KeyValue label="西元出生日期" value={profile.birth} />
+          <KeyValue label="手機號碼" value={profile.number} />
           <KeyValue label="身分證字號" value={profile.id} />
-          <KeyValue label="生日" value={profile.birth} />
-          <KeyValue label="電話" value={profile.number} />
+          <KeyValue label="電子信箱" value={profile.email} />
         </div>
       ) : (
         <div className="text-gray-500">尚無註冊資訊</div>

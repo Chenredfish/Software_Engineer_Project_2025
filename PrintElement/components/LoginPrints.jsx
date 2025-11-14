@@ -21,7 +21,7 @@ export function ReturnCode({ code }) {
 export function PrintCodeResult({ ok }) {
   return (
     <Alert type={ok ? "success" : "danger"}>
-      {ok ? "驗證碼正確" : "驗證碼錯誤，請重新輸入"}
+      {ok ? "驗證碼正確" : "驗證碼錯誤，查無電子郵件"}
     </Alert>
   );
 }

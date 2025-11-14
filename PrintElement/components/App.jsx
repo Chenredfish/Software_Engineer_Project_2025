@@ -16,9 +16,9 @@ export default function App() {
       <PrintCodeResult ok />
       <PrintResetPwdResult ok />
       <ShowEmailError />
-      <ShowSign profile={{ name: "王小明", email: "test@example.com", id: "A123456789", birth: "2000-01-01", number: "0912-345-678" }} />
-      <BookDisplayCinema items={["台北信義威泰", "桃園中壢威泰"]} />
-      <DisplayTicket order={{ theater: "信義", movie: "絕地戰警", datetime: "2025/11/12 19:00", seats: ["A1","A2"], menu: ["爆米花套"], total: 560, ticketCode: "WT-9F3K1" }} />
+      <ShowSign profile={{ name: "陳碩軒", email: "John123456@gamil.com", id: "A123456789", birth: "2001-01-01", number: "0912-345-678" }} />
+      <BookDisplayCinema items={["台北信義威秀", "桃園中壢威秀"]} />
+      <DisplayTicket order={{ theater: "信義", movie: "瓦力", datetime: "2025/9/26 10:36", seats: ["E","16"], menu: ["可樂套餐"], total: 100, ticketCode: "BJKLK12" }} />
       <ReturnInquiry records={[{ date: "2025/11/01", theater: "信義", showing: "19:10", movie: "沙丘2", seats: ["B3","B4"], code: "X1Z9", status: "已取票" }]} />
       <DisplayRefundSuccess code="X1Z9" amount={280} method="信用卡" />
       <BrowseDisplayMovie items={["沙丘2", "名偵探柯南", "腦筋急轉彎2"]} />
