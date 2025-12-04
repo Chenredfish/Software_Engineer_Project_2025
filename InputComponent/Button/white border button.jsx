@@ -1,7 +1,7 @@
 // ForgotPasswordButton.jsx
 import Button from "@mui/material/Button";
 
-export default function ForgotPasswordButton({ onClick }) {
+export default function ForgotPasswordButton({ text = "登入",onClick }) {
   return (
     <Button
       variant="text" // 無外框、無背景
@@ -16,7 +16,7 @@ export default function ForgotPasswordButton({ onClick }) {
       }}
       onClick={onClick}
     >
-      忘記密碼
+      {text}
     </Button>
   );
 }

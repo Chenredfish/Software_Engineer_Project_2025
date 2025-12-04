@@ -1,7 +1,7 @@
 // NoButton.jsx
 import Button from "@mui/material/Button";
 
-export default function NoButton({ onClick }) {
+export default function NoButton({ text = "否", onClick }) {
   return (
     <Button
       variant="contained"
@@ -9,7 +9,7 @@ export default function NoButton({ onClick }) {
       sx={{ mt: 1, backgroundColor: "#9e9e9e", "&:hover": { backgroundColor: "#757575" } }}
       onClick={onClick}
     >
-      否
+      {text}
     </Button>
   );
 }
