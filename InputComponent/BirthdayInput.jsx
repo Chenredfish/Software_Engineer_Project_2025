@@ -1,7 +1,6 @@
-// BirthdayInput.jsx
 import TextField from "@mui/material/TextField";
 
-export default function BirthdayInput() {
+export default function BirthdayInput({ value, onChange }) {
   return (
     <TextField
       id="birthday-input"
@@ -10,6 +9,8 @@ export default function BirthdayInput() {
       placeholder="請輸入生日（例如：2003/05/21）"
       fullWidth
       margin="normal"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
     />
   );
 }
