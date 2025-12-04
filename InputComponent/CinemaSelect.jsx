@@ -1,4 +1,5 @@
 // CinemaSelect.jsx
+// 整合用途: 整合 B5, Br9, Br23 的影城選擇功能
 import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 
+// 整合用途: 已實作完整的付款介面功能 (B27, M15)
 // Plain React implementation (no external UI library) so it builds in sandboxed environments
 // Includes:
 // - 信用卡卡號自動分組顯示 (4-4-4-4...)

@@ -1,4 +1,5 @@
 // NumberInput.jsx
+// 整合用途: 已實作數字輸入功能 (B16)
 import TextField from "@mui/material/TextField";
 
 export default function NumberInput({ value, onChange }) {

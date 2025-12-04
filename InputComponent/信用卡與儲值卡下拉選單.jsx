@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FormControl, Select, MenuItem, Box, Typography } from "@mui/material";
 
+// 整合用途: 已實作付款方式選擇功能 (B26)
 export default function CardSelector() {
   const [cardType, setCardType] = useState("");
 
