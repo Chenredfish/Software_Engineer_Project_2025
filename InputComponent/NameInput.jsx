@@ -1,8 +1,7 @@
 // NameInput.jsx
-// 整合用途: S2 註冊姓名輸入, 可重用於 M9 GetUserName
 import TextField from "@mui/material/TextField";
 
-export default function NameInput() {
+export default function NameInput({ value, onChange }) {
   return (
     <TextField
       id="name-input"
@@ -11,6 +10,8 @@ export default function NameInput() {
       placeholder="請輸入姓名"
       fullWidth
       margin="normal"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
     />
   );
 }

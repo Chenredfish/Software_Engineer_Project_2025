@@ -1,7 +1,6 @@
-// PhoneInput.jsx
 import TextField from "@mui/material/TextField";
 
-export default function PhoneInput() {
+export default function PhoneInput({ value, onChange }) {
   return (
     <TextField
       id="phone-input"
@@ -10,6 +9,8 @@ export default function PhoneInput() {
       placeholder="請輸入電話號碼"
       fullWidth
       margin="normal"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
     />
   );
 }

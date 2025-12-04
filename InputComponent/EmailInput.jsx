@@ -1,8 +1,6 @@
-// EmailInput.jsx
-// 整合用途: L8 忘記密碼Email輸入, S3 註冊Email輸入
 import TextField from "@mui/material/TextField";
 
-export default function EmailInput() {
+export default function EmailInput({ value, onChange }) {
   return (
     <TextField
       id="email-input"
@@ -12,6 +10,8 @@ export default function EmailInput() {
       placeholder="請輸入電子信箱"
       fullWidth
       margin="normal"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
     />
   );
 }
