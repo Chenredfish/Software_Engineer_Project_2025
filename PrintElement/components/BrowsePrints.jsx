@@ -1,12 +1,47 @@
-// src/components/BrowsePrints.jsx
+// src/components/BrowsePrints.jsx — MUI Version (Style A)
+// 完整線框白底風格，符合你的示意圖。
+
 import React from "react";
-import { InfoCard } from "./SharedUI";
+import {
+  Card, CardHeader, CardContent,
+  Typography, List, ListItem,
+  Box, Chip, Grid
+} from "@mui/material";
+
+/* ------------------------ 共用元件 ------------------------ */
+
+function InfoCard({ title, subtitle, children }) {
+  return (
+    <Card variant="outlined" sx={{ mb: 2 }}>
+      <CardHeader
+        title={title}
+        subheader={subtitle}
+        sx={{
+          "& .MuiCardHeader-title": { fontWeight: "bold" },
+          "& .MuiCardHeader-subheader": { color: "gray" }
+        }}
+      />
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
+/* ------------------------ 各元件改寫 ------------------------ */
 
 export function DisplayCinema({ items = [] }) {
   return (
     <InfoCard title="影城資訊">
-      {items.length === 0 ? <div className="text-gray-500">目前無資料</div> :
-        <ul className="list-disc pl-5">{items.map((c, i) => <li key={i}>{c}</li>)}</ul>}
+      {items.length === 0 ? (
+        <Typography color="text.secondary">目前無資料</Typography>
+      ) : (
+        <List dense>
+          {items.map((c, i) => (
+            <ListItem key={i} sx={{ pl: 0 }}>
+              {c}
+            </ListItem>
+          ))}
+        </List>
+      )}
     </InfoCard>
   );
 }
@@ -14,9 +49,11 @@ export function DisplayCinema({ items = [] }) {
 export function DisplayChoose({ options = ["電影", "影城", "餐飲", "活動", "快搜"] }) {
   return (
     <InfoCard title="可查詢項目">
-      <div className="flex flex-wrap gap-2">
-        {options.map((o, i) => <span key={i} className="px-3 py-1 rounded-full border">{o}</span>)}
-      </div>
+      <Box display="flex" flexWrap="wrap" gap={1}>
+        {options.map((o, i) => (
+          <Chip key={i} label={o} variant="outlined" />
+        ))}
+      </Box>
     </InfoCard>
   );
 }
@@ -24,35 +61,48 @@ export function DisplayChoose({ options = ["電影", "影城", "餐飲", "活動
 export function DisplayMovie({ items = [] }) {
   return (
     <InfoCard title="電影列表">
-      {items.length === 0 ? <div className="text-gray-500">目前無資料</div> :
-        <ul className="list-disc pl-5">{items.map((m, i) => <li key={i}>{m}</li>)}</ul>}
+      {items.length === 0 ? (
+        <Typography color="text.secondary">目前無資料</Typography>
+      ) : (
+        <List dense>
+          {items.map((m, i) => (
+            <ListItem key={i} sx={{ pl: 0 }}>
+              {m}
+            </ListItem>
+          ))}
+        </List>
+      )}
     </InfoCard>
   );
 }
 
 export function MovieDetail({ detail }) {
-  // detail: { title, director, actors, runtime, intro }
   const d = detail || {};
   return (
     <InfoCard title={d.title || "電影詳情"}>
-      <div className="space-y-1 text-sm">
-        {d.director && <div>導演：{d.director}</div>}
-        {d.actors && <div>演員：{Array.isArray(d.actors) ? d.actors.join("、") : d.actors}</div>}
-        {d.runtime && <div>片長：{d.runtime}</div>}
-        {d.intro && <div className="mt-2">{d.intro}</div>}
-      </div>
+      <Box sx={{ lineHeight: 1.8 }}>
+        {d.director && <Typography>導演：{d.director}</Typography>}
+        {d.actors && (
+          <Typography>
+            演員：{Array.isArray(d.actors) ? d.actors.join("、") : d.actors}
+          </Typography>
+        )}
+        {d.runtime && <Typography>片長：{d.runtime}</Typography>}
+        {d.intro && (
+          <Typography sx={{ mt: 1 }}>{d.intro}</Typography>
+        )}
+      </Box>
     </InfoCard>
   );
 }
 
 export function DisplayCinemaInfo({ detail }) {
-  // detail: { name, address, phone, rooms }
   const d = detail || {};
   return (
     <InfoCard title={d.name || "影城資訊"}>
-      {d.address && <div className="text-sm">地址：{d.address}</div>}
-      {d.phone && <div className="text-sm">電話：{d.phone}</div>}
-      {d.rooms && <div className="text-sm">影廳數：{d.rooms}</div>}
+      {d.address && <Typography>地址：{d.address}</Typography>}
+      {d.phone && <Typography>電話：{d.phone}</Typography>}
+      {d.rooms && <Typography>影廳數：{d.rooms}</Typography>}
     </InfoCard>
   );
 }
@@ -64,19 +114,29 @@ export function CinemaDetail({ detail }) {
 export function DisplayMenu({ items = [] }) {
   return (
     <InfoCard title="餐飲列表">
-      {items.length === 0 ? <div className="text-gray-500">目前無資料</div> :
-        <ul className="list-disc pl-5">{items.map((m, i) => <li key={i}>{m}</li>)}</ul>}
+      {items.length === 0 ? (
+        <Typography color="text.secondary">目前無資料</Typography>
+      ) : (
+        <List dense>
+          {items.map((m, i) => (
+            <ListItem sx={{ pl: 0 }} key={i}>
+              {m}
+            </ListItem>
+          ))}
+        </List>
+      )}
     </InfoCard>
   );
 }
 
 export function MenuDetail({ detail }) {
-  // detail: { name, price, description }
   const d = detail || {};
   return (
     <InfoCard title={d.name || "餐飲詳情"}>
-      {d.price != null && <div className="text-sm">價格：${d.price}</div>}
-      {d.description && <div className="text-sm mt-1">{d.description}</div>}
+      {d.price != null && <Typography>價格：${d.price}</Typography>}
+      {d.description && (
+        <Typography sx={{ mt: 1 }}>{d.description}</Typography>
+      )}
     </InfoCard>
   );
 }
@@ -84,8 +144,17 @@ export function MenuDetail({ detail }) {
 export function DisplayActivities({ items = [] }) {
   return (
     <InfoCard title="活動列表">
-      {items.length === 0 ? <div className="text-gray-500">目前無資料</div> :
-        <ul className="list-disc pl-5">{items.map((a, i) => <li key={i}>{a}</li>)}</ul>}
+      {items.length === 0 ? (
+        <Typography color="text.secondary">目前無資料</Typography>
+      ) : (
+        <List dense>
+          {items.map((a, i) => (
+            <ListItem sx={{ pl: 0 }} key={i}>
+              {a}
+            </ListItem>
+          ))}
+        </List>
+      )}
     </InfoCard>
   );
 }
@@ -94,8 +163,10 @@ export function ActivitiesDetail({ detail }) {
   const d = detail || {};
   return (
     <InfoCard title={d.name || "活動詳情"}>
-      {d.date && <div className="text-sm">日期：{d.date}</div>}
-      {d.content && <div className="text-sm mt-1">{d.content}</div>}
+      {d.date && <Typography>日期：{d.date}</Typography>}
+      {d.content && (
+        <Typography sx={{ mt: 1 }}>{d.content}</Typography>
+      )}
     </InfoCard>
   );
 }
@@ -103,7 +174,7 @@ export function ActivitiesDetail({ detail }) {
 export function DisplayMovieOrCinema({ mode = "電影" }) {
   return (
     <InfoCard title="快搜項目">
-      <div className="text-sm">目前選擇：{mode}</div>
+      <Typography>目前選擇：{mode}</Typography>
     </InfoCard>
   );
 }
@@ -111,8 +182,17 @@ export function DisplayMovieOrCinema({ mode = "電影" }) {
 export function DisplayMovieFromDB({ items = [] }) {
   return (
     <InfoCard title="資料庫：電影">
-      {items.length === 0 ? <div className="text-gray-500">目前無資料</div> :
-        <ul className="list-disc pl-5">{items.map((m, i) => <li key={i}>{m}</li>)}</ul>}
+      {items.length === 0 ? (
+        <Typography color="text.secondary">目前無資料</Typography>
+      ) : (
+        <List dense>
+          {items.map((m, i) => (
+            <ListItem sx={{ pl: 0 }} key={i}>
+              {m}
+            </ListItem>
+          ))}
+        </List>
+      )}
     </InfoCard>
   );
 }
@@ -120,8 +200,17 @@ export function DisplayMovieFromDB({ items = [] }) {
 export function DisplayCinemaFromDB({ items = [] }) {
   return (
     <InfoCard title="資料庫：影城">
-      {items.length === 0 ? <div className="text-gray-500">目前無資料</div> :
-        <ul className="list-disc pl-5">{items.map((c, i) => <li key={i}>{c}</li>)}</ul>}
+      {items.length === 0 ? (
+        <Typography color="text.secondary">目前無資料</Typography>
+      ) : (
+        <List dense>
+          {items.map((c, i) => (
+            <ListItem sx={{ pl: 0 }} key={i}>
+              {c}
+            </ListItem>
+          ))}
+        </List>
+      )}
     </InfoCard>
   );
 }
@@ -129,26 +218,51 @@ export function DisplayCinemaFromDB({ items = [] }) {
 export function DisplayDateFromDB({ items = [] }) {
   return (
     <InfoCard title="可選擇日期">
-      {items.length === 0 ? <div className="text-gray-500">目前無資料</div> :
-        <div className="flex flex-wrap gap-2">{items.map((d, i) => (
-          <span key={i} className="px-3 py-1 rounded-full border">{d}</span>
-        ))}</div>}
+      {items.length === 0 ? (
+        <Typography color="text.secondary">目前無資料</Typography>
+      ) : (
+        <Box display="flex" flexWrap="wrap" gap={1}>
+          {items.map((d, i) => (
+            <Chip key={i} label={d} variant="outlined" />
+          ))}
+        </Box>
+      )}
     </InfoCard>
   );
 }
 
 export function DisplaySeat({ seats = [] }) {
-  const color = (s) => s === "sold" ? "bg-red-200" : s === "picked" ? "bg-blue-200" : "bg-white";
+  const seatColor = (state) =>
+    state === "sold"
+      ? "#ffcdd2" // 紅色淡色（已售）
+      : state === "picked"
+      ? "#bbdefb" // 藍色淡色（選取）
+      : "#ffffff"; // 白色（空位）
+
   return (
     <InfoCard title="座位狀態" subtitle="紅=已售、白=空位、藍=選中">
-      {seats.length === 0 ? <div className="text-gray-500">尚無座位資料</div> :
-        <div className="grid grid-cols-8 gap-2">
+      {seats.length === 0 ? (
+        <Typography color="text.secondary">尚無座位資料</Typography>
+      ) : (
+        <Grid container spacing={1}>
           {seats.map((s, i) => (
-            <div key={i} className={`h-8 w-8 border rounded flex items-center justify-center ${color(s.state)}`}>
-              <span className="text-xs">{s.label}</span>
-            </div>
+            <Grid item xs={1.5} key={i}>
+              <Box
+                width={35}
+                height={35}
+                border={1}
+                borderRadius={1}
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                sx={{ backgroundColor: seatColor(s.state) }}
+              >
+                <Typography variant="caption">{s.label}</Typography>
+              </Box>
+            </Grid>
           ))}
-        </div>}
+        </Grid>
+      )}
     </InfoCard>
   );
 }
