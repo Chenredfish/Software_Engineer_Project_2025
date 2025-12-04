@@ -177,7 +177,7 @@ app.post('/api/init-sample-data', async (req, res) => {
 
 // ==================== CORE TABLES API ====================
 
-// 🏢 Cinema routes
+// Cinema routes
 app.get('/api/cinemas', async (req, res) => {
   try {
     const cinemas = await db.findAll('cinema');
@@ -232,7 +232,7 @@ app.delete('/api/cinemas/:id', async (req, res) => {
   }
 });
 
-// 🎬 Movie routes
+// Movie routes
 app.get('/api/movies', async (req, res) => {
   try {
     const movies = await db.findAll('movie');
@@ -287,7 +287,7 @@ app.delete('/api/movies/:id', async (req, res) => {
   }
 });
 
-// 👥 Member routes
+// Member routes
 app.get('/api/members', async (req, res) => {
   try {
     const members = await db.findAll('member');
@@ -325,7 +325,7 @@ app.post('/api/members', async (req, res) => {
   }
 });
 
-// 🎭 Showing routes
+// Showing routes
 app.get('/api/showings', async (req, res) => {
   try {
     const showings = await db.findAll('showing');
@@ -356,7 +356,7 @@ app.post('/api/showings', async (req, res) => {
   }
 });
 
-// 🎫 Booking routes
+// Booking routes
 app.get('/api/bookings', async (req, res) => {
   try {
     const bookings = await db.findAll('bookingrecord');
@@ -375,7 +375,7 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
-// 🎪 Theater routes
+// Theater routes
 app.get('/api/theaters', async (req, res) => {
   try {
     const theaters = await db.findAll('theater');
@@ -394,7 +394,7 @@ app.post('/api/theaters', async (req, res) => {
   }
 });
 
-// 🍕 Meals
+// Meals
 app.get('/api/meals', async (req, res) => {
   try {
     const meals = await db.findAll('meals');
@@ -404,7 +404,7 @@ app.get('/api/meals', async (req, res) => {
   }
 });
 
-// 🎟️ Ticket Classes
+// Ticket Classes
 app.get('/api/ticketclasses', async (req, res) => {
   try {
     const ticketclasses = await db.findAll('ticketclass');
@@ -414,7 +414,7 @@ app.get('/api/ticketclasses', async (req, res) => {
   }
 });
 
-// 📋 Order Status
+// Order Status
 app.get('/api/orderstatus', async (req, res) => {
   try {
     const orderstatus = await db.findAll('orderstatus');
@@ -424,7 +424,7 @@ app.get('/api/orderstatus', async (req, res) => {
   }
 });
 
-// 💺 Seat Management
+// Seat Management
 app.get('/api/seats/:showingID', async (req, res) => {
   try {
     const seats = await db.findAll('seat', { showingID: req.params.showingID });
@@ -501,9 +501,9 @@ app.use((req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 伺服器運行在 http://localhost:${PORT} (SQLite 版本)`);
-  console.log(`📊 API文件: http://localhost:${PORT}/api`);
-  console.log(`🗄️  資料庫: SQLite (moviesql.db)`);
+  console.log(`伺服器運行在 http://localhost:${PORT} (SQLite 版本)`);
+  console.log(`API文件: http://localhost:${PORT}/api`);
+  console.log(`資料庫: SQLite (moviesql.db)`);
   console.log(`✨ 特色: 無需 MySQL 服務，即開即用！`);
 });
 

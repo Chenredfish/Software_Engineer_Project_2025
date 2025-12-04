@@ -1,7 +1,6 @@
-// IdNumberInput.jsx
 import TextField from "@mui/material/TextField";
 
-export default function IdNumberInput() {
+export default function IdNumberInput({ value, onChange }) {
   return (
     <TextField
       id="id-number-input"
@@ -10,6 +9,8 @@ export default function IdNumberInput() {
       placeholder="請輸入身分證字號"
       fullWidth
       margin="normal"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
     />
   );
 }
