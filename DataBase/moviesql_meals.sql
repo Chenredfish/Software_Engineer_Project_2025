@@ -38,7 +38,11 @@ CREATE TABLE `meals` (
 
 LOCK TABLES `meals` WRITE;
 /*!40000 ALTER TABLE `meals` DISABLE KEYS */;
-INSERT INTO `meals` VALUES ('M00001','爆米花套餐',250,'經典爆米花加兩杯飲料','/path/to/popcorn.jpg'),('M00002','熱狗堡',120,'美式經典熱狗堡','/path/to/hotdog.jpg'),('M00003','吉拿棒',80,'灑滿肉桂粉','/path/to/churros.jpg'),('M00004','汽水單杯',70,'可口可樂/雪碧','/path/to/soda.jpg'),('M00005','礦泉水',50,'純淨飲用水','/path/to/water.jpg');
+INSERT INTO `meals` VALUES ('M00001', '爆米花套餐', 250, '經典爆米花加兩杯飲料', 'Photo/meals/popcorn_set.jpg'),
+('M00002', '熱狗堡', 120, '美式經典熱狗堡', 'Photo/meals/hotdog.jpg'),
+('M00003', '吉拿棒', 80, '灑滿肉桂粉', 'Photo/meals/churros.jpg'),
+('M00004', '汽水單杯', 70, '可口可樂/雪碧', 'Photo/meals/soda.jpg'),
+('M00005', '礦泉水', 50, '純淨飲用水', 'Photo/meals/water.jpg');
 /*!40000 ALTER TABLE `meals` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

@@ -39,7 +39,11 @@ CREATE TABLE `cinema` (
 
 LOCK TABLES `cinema` WRITE;
 /*!40000 ALTER TABLE `cinema` DISABLE KEYS */;
-INSERT INTO `cinema` VALUES ('C00001','台北市信義區忠孝東路 1 號','台北旗艦影城','0227123456','Mon-Sun 10:00-02:00','/photo/taipei.jpg'),('C00002','台中市西屯區逢甲路 2 號','台中數位影城','0423456789','Mon-Sun 11:00-01:00','/photo/taichung.jpg'),('C00003','高雄市新興區中正路 3 號','高雄港灣影城','0778901234','Mon-Sun 09:30-03:00','/photo/kaohsiung.jpg'),('C00004','新北市板橋區縣民大道','板橋巨幕影城','0229876543','Mon-Sun 10:30-01:30','/photo/banqiao.jpg'),('C00005','桃園市中壢區復興路','中壢星光影城','0345678901','Mon-Sun 10:00-01:00','/photo/zhongli.jpg');
+INSERT INTO `cinema` VALUES ('C00001', '台北市信義區忠孝東路 1 號', '台北旗艦影城', '0227123456', 'Mon-Sun 10:00-02:00', 'Photo/cinima/taipei.jpg'),
+('C00002', '台中市西屯區逢甲路 2 號', '台中數位影城', '0423456789', 'Mon-Sun 11:00-01:00', 'Photo/cinima/taichung.jpg'),
+('C00003', '高雄市新興區中正路 3 號', '高雄港灣影城', '0778901234', 'Mon-Sun 09:30-03:00', 'Photo/cinima/kaohsiung.jpg'),
+('C00004', '新北市板橋區縣民大道', '板橋巨幕影城', '0229876543', 'Mon-Sun 10:30-01:30', 'Photo/cinima/banqiao.jpg'),
+('C00005', '桃園市中壢區復興路', '中壢星光影城', '0345678901', 'Mon-Sun 10:00-01:00', 'Photo/cinima/zhongli.jpg');
 /*!40000 ALTER TABLE `cinema` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
