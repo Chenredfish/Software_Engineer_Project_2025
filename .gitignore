@@ -4,8 +4,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Database files (SQLite)
-*.db
+# Database files (SQLite) - 暫時允許 moviesql.db 以便協作
+# *.db
 *.sqlite
 *.sqlite3
 

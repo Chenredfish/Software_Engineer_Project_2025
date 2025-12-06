@@ -2,7 +2,7 @@
 
 簡易的 Node.js + Express + SQLite 後端管理系統
 
-## 🚀 快速開始
+## 快速開始
 
 ### 1. 安裝依賴
 ```bash
@@ -16,6 +16,9 @@ npm run dev
 
 # 正式模式
 npm start
+
+# API 測試
+npm run test
 ```
 
 ### 3. 測試服務
@@ -24,13 +27,13 @@ npm start
 - API 文件：http://localhost:3000/api
 - 連線測試：http://localhost:3000/api/test
 
-### ✨ 特色
-- ✅ **即開即用**：無需安裝 MySQL 或其他資料庫服務
-- ✅ **檔案型資料庫**：SQLite 資料庫自動建立為 `moviesql.db`
-- ✅ **自動初始化**：首次啟動會自動建立所有資料表
-- ✅ **完整功能**：支援所有 CRUD 操作和業務邏輯
+### 特色
+- **即開即用**：無需安裝 MySQL 或其他資料庫服務
+- **檔案型資料庫**：SQLite 資料庫自動建立為 `moviesql.db`
+- **自動初始化**：首次啟動會自動建立所有資料表
+- **完整功能**：支援所有 CRUD 操作和業務邏輯
 
-## 📊 主要 API 路由
+## 主要 API 路由
 
 ### 系統功能
 - `GET /` - 系統狀態
@@ -83,7 +86,7 @@ npm start
 ### 管理功能
 - `POST /api/admin/login` - 管理員登入（帳號：admin, 密碼：admin123）
 
-## 🎯 使用範例
+## 使用範例
 
 ### PowerShell 測試指令
 
@@ -155,33 +158,34 @@ fetch('http://localhost:3000/api/movies', {
 .then(data => console.log(data));
 ```
 
-## ⚙️ 系統需求
+## 系統需求
 
 - Node.js 14+
-- MySQL 5.7+
-- 已建立好的 cinema_db 資料庫
+- 無需額外資料庫安裝（使用 SQLite）
 
-## 🔧 免費部署選項
+## 免費部署選項
 
 ### Heroku (推薦)
 1. 安裝 Heroku CLI
 2. `heroku create your-app-name`
 3. `git push heroku main`
-4. 使用 JawsDB MySQL (免費方案)
+4. SQLite 檔案會自動建立
 
 ### Railway
 1. 連接 GitHub repo
 2. 自動部署
-3. 內建 MySQL 資料庫
+3. SQLite 檔案會自動建立
 
 ### Render
 1. 連接 GitHub
 2. 選擇 Web Service
 3. 自動建置和部署
+4. SQLite 資料庫無需額外設定
 
-## 📝 注意事項
+## 注意事項
 
 - 管理員帳號: `admin` / 密碼: `admin123`
-- 確保 MySQL 服務已啟動
-- 修改 `.env` 中的資料庫連線資訊
+- SQLite 資料庫會自動建立為 `moviesql.db`
+- 首次啟動會自動建立所有資料表和範例資料
 - 實際部署時請更改管理員密碼
+- 可使用 `npm run test` 進行快速API測試
