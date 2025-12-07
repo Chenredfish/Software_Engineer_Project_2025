@@ -115,6 +115,12 @@ Invoke-RestMethod -Uri "http://localhost:3000/api/bookings"
 # 查詢電影分級
 Invoke-RestMethod -Uri "http://localhost:3000/api/rated"
 
+#查詢板橋大遠百 (C001) 正在上映的電影
+Invoke-RestMethod -Uri "http://localhost:3000/api/cinemas/C001/movies"
+
+#查詢電影 阿凡達 (M001) 的所有放映地點和時間：
+Invoke-RestMethod -Uri "http://localhost:3000/api/movies/M001/showings"
+
 # 管理員登入
 $body = @{ account = "admin"; password = "admin123" } | ConvertTo-Json
 Invoke-RestMethod -Uri "http://localhost:3000/api/admin/login" -Method POST -Body $body -ContentType "application/json"
