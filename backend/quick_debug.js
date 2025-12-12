@@ -1,6 +1,6 @@
 const http = require('http');
 
-// 簡單的 API 呼叫函數
+// 簡單的 API 呼叫函數 (GET)
 function callAPI(endpoint) {
   return new Promise((resolve, reject) => {
     const url = `http://localhost:3000${endpoint}`;
@@ -16,6 +16,39 @@ function callAPI(endpoint) {
         }
       });
     }).on('error', reject);
+  });
+}
+
+// POST 請求函數
+function postAPI(endpoint, postData) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(postData);
+    const options = {
+      hostname: 'localhost',
+      port: 3000,
+      path: endpoint,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data)
+      }
+    };
+
+    const req = http.request(options, (res) => {
+      let responseData = '';
+      res.on('data', (chunk) => responseData += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(responseData));
+        } catch (e) {
+          resolve(responseData);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(data);
+    req.end();
   });
 }
 
@@ -123,8 +156,99 @@ async function quickTest() {
   } catch (error) {
     console.log(`失敗: ${error.message}`);
   }
+  console.log();
+
+  // 8. 會員認證 API 測試
+  console.log('=== 8. 會員認證系統測試 ===');
   
-  console.log('\n測試完成 - 以上展示了常見的API查詢用法');
+  // 8a. 測試會員註冊
+  console.log('8a. 測試會員註冊:');
+  try {
+    const registerData = {
+      memberAccount: 'test_user_' + Date.now(), // 使用時間戳避免重複
+      memberPwd: 'password123',
+      memberName: '測試用戶',
+      memberBirth: '1990-01-01',
+      memberPhone: '0912345678'
+    };
+    
+    const registerResult = await postAPI('/api/auth/register', registerData);
+    if (registerResult.success) {
+      console.log(`  ✅ 註冊成功: ${registerResult.member.memberName} (${registerResult.member.memberAccount})`);
+      console.log(`  會員ID: ${registerResult.member.memberID}, 餘額: $${registerResult.member.memberBalance}`);
+      
+      // 8b. 測試會員登入
+      console.log('8b. 測試會員登入:');
+      const loginResult = await postAPI('/api/auth/login', {
+        account: registerData.memberAccount,
+        password: registerData.memberPwd
+      });
+      
+      if (loginResult.success) {
+        console.log(`  ✅ 登入成功: ${loginResult.member.memberName}`);
+        console.log(`  會員資料: ID=${loginResult.member.memberID}, 電話=${loginResult.member.memberPhone}`);
+        
+        // 8c. 測試會員登出
+        console.log('8c. 測試會員登出:');
+        const logoutResult = await postAPI('/api/auth/logout', {});
+        if (logoutResult.success) {
+          console.log(`  ✅ 登出成功`);
+        }
+      } else {
+        console.log(`  ❌ 登入失敗: ${loginResult.error}`);
+      }
+    } else {
+      console.log(`  ❌ 註冊失敗: ${registerResult.error}`);
+    }
+  } catch (error) {
+    console.log(`  ❌ 認證測試失敗: ${error.message}`);
+  }
+  console.log();
+  
+  // 9. 測試重複帳號註冊 (應該失敗)
+  console.log('=== 9. 錯誤情況測試 ===');
+  try {
+    console.log('9a. 測試重複帳號註冊 (應該失敗):');
+    const duplicateResult = await postAPI('/api/auth/register', {
+      memberAccount: 'user_john', // 已存在的帳號
+      memberPwd: 'newpassword',
+      memberName: '重複用戶',
+      memberBirth: '1995-01-01',
+      memberPhone: '0987654321'
+    });
+    
+    if (!duplicateResult.success) {
+      console.log(`  ✅ 正確阻擋重複帳號: ${duplicateResult.error}`);
+    } else {
+      console.log(`  ❌ 未正確阻擋重複帳號註冊`);
+    }
+    
+    console.log('9b. 測試錯誤密碼登入 (應該失敗):');
+    const wrongPasswordResult = await postAPI('/api/auth/login', {
+      account: 'user_john',
+      password: 'wrongpassword'
+    });
+    
+    if (!wrongPasswordResult.success) {
+      console.log(`  ✅ 正確阻擋錯誤密碼: ${wrongPasswordResult.error}`);
+    } else {
+      console.log(`  ❌ 未正確驗證密碼`);
+    }
+    
+    console.log('9c. 測試帳號可用性檢查:');
+    const checkResult = await postAPI('/api/auth/check-account', {
+      account: 'user_john'
+    });
+    
+    if (checkResult.success) {
+      console.log(`  ✅ 帳號檢查: 存在=${checkResult.exists}, 可用=${checkResult.available}`);
+    }
+    
+  } catch (error) {
+    console.log(`  ❌ 錯誤測試失敗: ${error.message}`);
+  }
+  
+  console.log('\n測試完成 - 包含資料庫查詢和會員認證功能測試');
 }
 
 // 執行測試

@@ -29,6 +29,10 @@ app.get('/api', (req, res) => {
     features: ['無需安裝 MySQL', '檔案型資料庫', '即開即用'],
     endpoints: {
       auth: {
+        'POST /api/auth/login': '會員登入',
+        'POST /api/auth/register': '會員註冊',
+        'POST /api/auth/logout': '會員登出',
+        'POST /api/auth/check-account': '檢查帳號可用性',
         'POST /api/admin/login': '管理員登入'
       },
       core_tables: {
@@ -566,6 +570,175 @@ app.get('/api/seats/:showingID', async (req, res) => {
     res.json(seats);
   } catch (error) {
     res.status(500).json({ error: '查詢座位失敗', details: error.message });
+  }
+});
+
+// 會員認證 API
+// Member Authentication APIs
+
+// 會員登入
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { account, password } = req.body;
+    
+    if (!account || !password) {
+      return res.status(400).json({ 
+        success: false,
+        error: '請提供帳號和密碼' 
+      });
+    }
+
+    // 查詢會員帳號
+    const members = await db.findAll('member', { 
+      memberAccount: account 
+    });
+
+    if (members.length === 0) {
+      return res.status(401).json({ 
+        success: false,
+        error: '帳號不存在' 
+      });
+    }
+
+    const member = members[0];
+
+    // 驗證密碼 (目前使用明文比對，實際應用建議使用 bcrypt)
+    if (member.memberPwd !== password) {
+      return res.status(401).json({ 
+        success: false,
+        error: '密碼錯誤' 
+      });
+    }
+
+    // 登入成功，隱藏敏感資訊
+    const { memberPwd, ...safeProfile } = member;
+    
+    res.json({ 
+      success: true,
+      message: '登入成功',
+      member: safeProfile,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: '登入失敗', 
+      details: error.message 
+    });
+  }
+});
+
+// 會員註冊
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { 
+      memberAccount, 
+      memberPwd, 
+      memberName, 
+      memberBirth, 
+      memberPhone 
+    } = req.body;
+    
+    // 基本資料驗證
+    if (!memberAccount || !memberPwd || !memberName || !memberBirth || !memberPhone) {
+      return res.status(400).json({ 
+        success: false,
+        error: '請填寫完整註冊資訊' 
+      });
+    }
+
+    // 檢查帳號是否已存在
+    const existingMembers = await db.findAll('member', { 
+      memberAccount: memberAccount 
+    });
+
+    if (existingMembers.length > 0) {
+      return res.status(409).json({ 
+        success: false,
+        error: '此帳號已被使用' 
+      });
+    }
+
+    // 生成新的會員 ID
+    const allMembers = await db.findAll('member');
+    const nextId = String(allMembers.length + 1).padStart(10, 'U00000000');
+
+    // 建立新會員資料
+    const newMember = {
+      memberID: nextId,
+      memberAccount,
+      memberPwd, // 實際應用建議使用 bcrypt 加密
+      memberName,
+      memberBirth,
+      memberPhone,
+      memberBalance: 0 // 預設餘額為 0
+    };
+
+    await db.insert('member', newMember);
+    
+    // 註冊成功，隱藏密碼
+    const { memberPwd: pwd, ...safeProfile } = newMember;
+    
+    res.status(201).json({ 
+      success: true,
+      message: '註冊成功',
+      member: safeProfile,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: '註冊失敗', 
+      details: error.message 
+    });
+  }
+});
+
+// 會員登出 (簡單版本，實際應用可能需要 JWT token 處理)
+app.post('/api/auth/logout', async (req, res) => {
+  try {
+    res.json({ 
+      success: true,
+      message: '登出成功',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: '登出失敗', 
+      details: error.message 
+    });
+  }
+});
+
+// 驗證會員帳號是否存在 (用於前端即時驗證)
+app.post('/api/auth/check-account', async (req, res) => {
+  try {
+    const { account } = req.body;
+    
+    if (!account) {
+      return res.status(400).json({ 
+        success: false,
+        error: '請提供帳號' 
+      });
+    }
+
+    const members = await db.findAll('member', { 
+      memberAccount: account 
+    });
+
+    res.json({ 
+      success: true,
+      exists: members.length > 0,
+      available: members.length === 0,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: '帳號檢查失敗', 
+      details: error.message 
+    });
   }
 });
 
