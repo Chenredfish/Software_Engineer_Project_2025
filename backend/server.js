@@ -75,111 +75,185 @@ app.get('/api/test', async (req, res) => {
   }
 });
 
-// 初始化範例資料
+// 初始化範例資料 (從 DataBase 資料夾轉換)
 app.post('/api/init-sample-data', async (req, res) => {
     try {
-        // 完整的範例資料集合 (已補齊所有必要的外鍵表)
+        // 完整的真實資料集合 (從 MySQL SQL 檔案轉換)
         const sampleData = {
             // 基礎參考表 (必須先插入)
             rated: [
-                { ratedID: 'R001', rateName: '普遍級' },
-                { ratedID: 'R002', rateName: '保護級' }, // 修正 '護眼級' 為 '保護級'，更常用
-                { ratedID: 'R003', rateName: '輔導級' },
-                { ratedID: 'R004', rateName: '限制級' }
+                { ratedID: 'R00001', rateName: '限制級' },
+                { ratedID: 'R00002', rateName: '輔導十五歲級' },
+                { ratedID: 'R00003', rateName: '保護級' },
+                { ratedID: 'R00004', rateName: '普遍級' },
+                { ratedID: 'R00005', rateName: '待審級' }
             ],
             version: [
-                { versionID: 'V001', versionName: '2D' },
-                { versionID: 'V002', versionName: '3D' },
-                { versionID: 'V003', versionName: 'IMAX' },
-                { versionID: 'V004', versionName: '4DX' }
+                { versionID: 'V00001', versionName: '2D 數位版' },
+                { versionID: 'V00002', versionName: 'IMAX 3D' },
+                { versionID: 'V00003', versionName: '4DX 2D' },
+                { versionID: 'V00004', versionName: 'Dolby Atmos' },
+                { versionID: 'V00005', versionName: '國語發音/中文字幕' }
             ],
             supervisor: [
                 { supervisorAccount: 'admin', supervisorPwd: 'admin123' }
             ],
-            orderstatus: [ // 新增：訂單狀態 (bookingrecord 依賴)
-                { orderStatusID: 'S001', orderStatusName: '已成立待付款' },
-                { orderStatusID: 'S002', orderStatusName: '付款成功' },
-                { orderStatusID: 'S003', orderStatusName: '已取消/退款' },
+            orderstatus: [
+                { orderStatusID: 'S00001', orderStatusName: '訂單成立', orderInfo: '客戶已完成訂票程序' },
+                { orderStatusID: 'S00002', orderStatusName: '付款失敗', orderInfo: '訂單尚未完成付款' },
+                { orderStatusID: 'S00003', orderStatusName: '已取票', orderInfo: '客戶已在現場取走實體票券' },
+                { orderStatusID: 'S00004', orderStatusName: '已取消', orderInfo: '訂單已在規定時間內取消' },
+                { orderStatusID: 'S00005', orderStatusName: '待取票', orderInfo: '已付款，等待客戶取票' }
             ],
-            ticketclass: [ // 新增：票種 (bookingrecord 依賴)
-                { ticketClassID: 'TC01', ticketClassName: '全票', ticketClassPrice: 300, ticketInfo: '一般成人票' },
-                { ticketClassID: 'TC02', ticketClassName: '學生票', ticketClassPrice: 250, ticketInfo: '需出示學生證' },
+            ticketclass: [
+                { ticketClassID: 'T00001', ticketClassName: '全票', ticketClassPrice: 320, ticketInfo: '成人票價' },
+                { ticketClassID: 'T00002', ticketClassName: '學生票', ticketClassPrice: 280, ticketInfo: '學生證購票優惠' },
+                { ticketClassID: 'T00003', ticketClassName: '愛心票', ticketClassPrice: 160, ticketInfo: '身心障礙人士專用' },
+                { ticketClassID: 'T00004', ticketClassName: '早場票', ticketClassPrice: 250, ticketInfo: '中午 12:00 前場次' },
+                { ticketClassID: 'T00005', ticketClassName: '夜貓票', ticketClassPrice: 200, ticketInfo: '午夜 00:00 後場次' }
             ],
-            meals: [ // 新增：餐點 (bookingrecord 依賴)
-                { mealsID: 'ML01', mealName: '單人套餐', mealsPrice: 150, mealsDisp: '爆米花+中可樂', mealsPhoto: 'set1.jpg' },
-                { mealsID: 'ML02', mealName: '雙人套餐', mealsPrice: 350, mealsDisp: '大爆米花+兩杯大可樂', mealsPhoto: 'set2.jpg' },
+            meals: [
+                { mealsID: 'M00001', mealName: '爆米花套餐', mealsPrice: 250, mealsDisp: '經典爆米花加兩杯飲料', mealsPhoto: 'Photo/meals/popcorn_set.jpg' },
+                { mealsID: 'M00002', mealName: '熱狗堡', mealsPrice: 120, mealsDisp: '美式經典熱狗堡', mealsPhoto: 'Photo/meals/hotdog.jpg' },
+                { mealsID: 'M00003', mealName: '吉拿棒', mealsPrice: 80, mealsDisp: '灑滿肉桂粉', mealsPhoto: 'Photo/meals/churros.jpg' },
+                { mealsID: 'M00004', mealName: '汽水單杯', mealsPrice: 70, mealsDisp: '可口可樂/雪碧', mealsPhoto: 'Photo/meals/soda.jpg' },
+                { mealsID: 'M00005', mealName: '礦泉水', mealsPrice: 50, mealsDisp: '純淨飲用水', mealsPhoto: 'Photo/meals/water.jpg' }
             ],
             
             // 影城與影廳 (showing 依賴 cinema, theater)
             cinema: [
                 { 
-                    cinemaID: 'C001', 
-                    cinemaName: '威秀影城板橋大遠百',
-                    cinemaAddress: '新北市板橋區縣民大道二段7號',
-                    cinemaPhoneNumber: '0233121212',
-                    cinemaBusinessTime: '10:00-24:00',
-                    cinemaPhoto: 'banqiao.jpg'
+                    cinemaID: 'C00001', 
+                    cinemaName: '台北旗艦影城',
+                    cinemaAddress: '台北市信義區忠孝東路 1 號',
+                    cinemaPhoneNumber: '0227123456',
+                    cinemaBusinessTime: 'Mon-Sun 10:00-02:00',
+                    cinemaPhoto: 'Photo/cinima/taipei.jpg'
                 },
                 { 
-                    cinemaID: 'C002', 
-                    cinemaName: '威秀影城台北京站',
-                    cinemaAddress: '台北市大同區承德路一段1號',
-                    cinemaPhoneNumber: '0225371818',
-                    cinemaBusinessTime: '09:30-24:00',
-                    cinemaPhoto: 'taipei.jpg'
+                    cinemaID: 'C00002', 
+                    cinemaName: '台中數位影城',
+                    cinemaAddress: '台中市西屯區逢甲路 2 號',
+                    cinemaPhoneNumber: '0423456789',
+                    cinemaBusinessTime: 'Mon-Sun 11:00-01:00',
+                    cinemaPhoto: 'Photo/cinima/taichung.jpg'
+                },
+                { 
+                    cinemaID: 'C00003', 
+                    cinemaName: '高雄港灣影城',
+                    cinemaAddress: '高雄市新興區中正路 3 號',
+                    cinemaPhoneNumber: '0778901234',
+                    cinemaBusinessTime: 'Mon-Sun 09:30-03:00',
+                    cinemaPhoto: 'Photo/cinima/kaohsiung.jpg'
+                },
+                { 
+                    cinemaID: 'C00004', 
+                    cinemaName: '板橋巨幕影城',
+                    cinemaAddress: '新北市板橋區縣民大道',
+                    cinemaPhoneNumber: '0229876543',
+                    cinemaBusinessTime: 'Mon-Sun 10:30-01:30',
+                    cinemaPhoto: 'Photo/cinima/banqiao.jpg'
+                },
+                { 
+                    cinemaID: 'C00005', 
+                    cinemaName: '中壢星光影城',
+                    cinemaAddress: '桃園市中壢區復興路',
+                    cinemaPhoneNumber: '0345678901',
+                    cinemaBusinessTime: 'Mon-Sun 10:00-01:00',
+                    cinemaPhoto: 'Photo/cinima/zhongli.jpg'
                 }
             ],
-            theater: [ // 新增：影廳 (showing 依賴)
-                { theaterID: 'T01', theaterName: 'A廳', cinemaID: 'C001' },
-                { theaterID: 'T02', theaterName: 'IMAX 廳', cinemaID: 'C001' },
-                { theaterID: 'T03', theaterName: 'B廳', cinemaID: 'C002' },
+            theater: [
+                { theaterID: 'H00001', theaterName: '巨幕廳 A', cinemaID: 'C00001' },
+                { theaterID: 'H00002', theaterName: '標準廳 1', cinemaID: 'C00001' },
+                { theaterID: 'H00003', theaterName: '標準廳 2', cinemaID: 'C00002' },
+                { theaterID: 'H00004', theaterName: 'VIP 包廂', cinemaID: 'C00003' },
+                { theaterID: 'H00005', theaterName: '4D 體驗廳', cinemaID: 'C00004' }
             ],
             
             // 核心業務表
-            movie: [ // (showing 依賴)
+            movie: [
                 {
-                    movieID: 'M001',
-                    movieName: '阿凡達：水之道',
-                    movieTime: '03:12:00',
-                    ratedID: 'R002',
-                    movieStartDate: '2024-12-15',
-                    movieInfo: '詹姆斯·卡麥隆執導的科幻史詩電影',
+                    movieID: 'D00001',
+                    movieName: '阿凡達',
+                    movieTime: '02:42:00',
+                    ratedID: 'R00003',
+                    movieStartDate: '2009-12-18',
+                    movieInfo: '一個關於潘朵拉星球與人類衝突的科幻故事。',
                     director: '詹姆斯·卡麥隆',
                     actors: '山姆·沃辛頓, 柔伊·莎達娜',
-                    moviePhoto: 'avatar2.jpg'
+                    moviePhoto: 'Photo/movie/avatar.jpg'
                 },
                 {
-                    movieID: 'M002',
-                    movieName: '捍衛戰士：獨行俠',
-                    movieTime: '02:11:00',
-                    ratedID: 'R003',
-                    movieStartDate: '2024-12-20',
-                    movieInfo: '湯姆·克魯斯主演的動作片',
-                    director: '約瑟夫·科金斯基',
-                    actors: '湯姆·克魯斯, 詹妮弗·康納利',
-                    moviePhoto: 'topgun.jpg'
+                    movieID: 'D00002',
+                    movieName: '動物方城市',
+                    movieTime: '01:48:00',
+                    ratedID: 'R00004',
+                    movieStartDate: '2016-03-04',
+                    movieInfo: '兔子茱蒂與狐狸尼克攜手破案的動畫片。',
+                    director: '拜倫·霍華德',
+                    actors: '金妮弗·古德溫, 傑森·貝特曼',
+                    moviePhoto: 'Photo/movie/zootopia.jpg'
+                },
+                {
+                    movieID: 'D00003',
+                    movieName: '出神入化',
+                    movieTime: '01:55:00',
+                    ratedID: 'R00002',
+                    movieStartDate: '2013-05-31',
+                    movieInfo: '四騎士利用魔術手法進行銀行劫案。',
+                    director: '路易斯·賴托瑞',
+                    actors: '傑西·艾森伯格, 馬克·盧法洛',
+                    moviePhoto: 'Photo/movie/illusion.jpg'
+                },
+                {
+                    movieID: 'D00004',
+                    movieName: '大蟒蛇',
+                    movieTime: '01:29:00',
+                    ratedID: 'R00001',
+                    movieStartDate: '1997-04-11',
+                    movieInfo: '一支紀錄片小組在亞馬遜叢林遭遇巨蟒。',
+                    director: '路易斯·羅沙',
+                    actors: '珍妮弗·洛佩茲, 冰塊酷巴',
+                    moviePhoto: 'Photo/movie/anaconda.jpg'
+                },
+                {
+                    movieID: 'D00005',
+                    movieName: '魔法壞女巫',
+                    movieTime: '02:30:00',
+                    ratedID: 'R00003',
+                    movieStartDate: '2024-11-27',
+                    movieInfo: '綠色皮膚女巫艾芙芭與白膚女巫葛琳達的友誼故事。',
+                    director: '朱浩偉',
+                    actors: '辛西婭·艾利沃, 亞莉安娜·格蘭德',
+                    moviePhoto: 'Photo/movie/wicked.jpg'
                 }
             ],
-            member: [ // (bookingrecord 依賴)
-                { memberID: 'M101', memberAccount: 'user_alpha', memberPwd: 'pass1234', memberName: '王小明', memberBirth: '1990-05-20', memberPhone: '0911222333', memberBalance: 500 },
-                { memberID: 'M102', memberAccount: 'user_beta', memberPwd: 'pass5678', memberName: '李佳穎', memberBirth: '1995-12-10', memberPhone: '0988777666', memberBalance: 1000 },
+            member: [
+                { memberID: 'A123456789', memberAccount: 'user_john', memberPwd: 'hashed_pwd1', memberName: '王大明', memberBirth: '1990-05-15', memberPhone: '0910123456', memberBalance: 5000 },
+                { memberID: 'B234567890', memberAccount: 'user_mary', memberPwd: 'hashed_pwd2', memberName: '陳小美', memberBirth: '1985-11-20', memberPhone: '0920234567', memberBalance: 12000 },
+                { memberID: 'C345678901', memberAccount: 'user_david', memberPwd: 'hashed_pwd3', memberName: '林志明', memberBirth: '2001-08-01', memberPhone: '0930345678', memberBalance: 800 },
+                { memberID: 'D456789012', memberAccount: 'user_lisa', memberPwd: 'hashed_pwd4', memberName: '黃麗莎', memberBirth: '1995-03-25', memberPhone: '0940456789', memberBalance: 3500 },
+                { memberID: 'E567890123', memberAccount: 'user_mike', memberPwd: 'hashed_pwd5', memberName: '吳麥克', memberBirth: '1976-01-10', memberPhone: '0950567890', memberBalance: 10000 }
             ],
             
             // 關聯表
-            showing: [ // (bookingrecord 依賴)
-                // M001 在 C001 的 T02 (IMAX 廳) 播放 3D 版
-                { showingID: 'S101', movieID: 'M001', theaterID: 'T02', versionID: 'V002', showingTime: '2025-12-08 18:30:00' }, 
-                // M002 在 C001 的 T01 (A廳) 播放 2D 版
-                { showingID: 'S102', movieID: 'M002', theaterID: 'T01', versionID: 'V001', showingTime: '2025-12-08 21:00:00' }, 
+            showing: [
+                { showingID: 'S00001', movieID: 'D00001', theaterID: 'H00001', versionID: 'V00001', showingTime: '2025-12-05 14:30:00' },
+                { showingID: 'S00002', movieID: 'D00002', theaterID: 'H00002', versionID: 'V00003', showingTime: '2025-12-05 18:00:00' },
+                { showingID: 'S00003', movieID: 'D00003', theaterID: 'H00003', versionID: 'V00005', showingTime: '2025-12-06 10:00:00' },
+                { showingID: 'S00004', movieID: 'D00004', theaterID: 'H00004', versionID: 'V00002', showingTime: '2025-12-06 20:30:00' },
+                { showingID: 'S00005', movieID: 'D00001', theaterID: 'H00005', versionID: 'V00004', showingTime: '2025-12-07 16:45:00' }
             ],
 
-            // 訂票紀錄 (修正鍵名為 bookingrecord)
-            bookingrecord: [ 
-                // M101 成功訂票 S101
-                { orderID: 'O1001', ticketID: 'TKT001', memberID: 'M101', showingID: 'S101', orderStateID: 'S002', mealsID: 'ML01', ticketTypeID: 'TC01', bookingTime: '2025-12-07 10:00:00', seatID: 'A05' }, 
-                // M102 取消訂票 S102 (不選餐點)
-                { orderID: 'O1002', ticketID: 'TKT002', memberID: 'M102', showingID: 'S102', orderStateID: 'S003', mealsID: null, ticketTypeID: 'TC02', bookingTime: '2025-12-07 10:30:00', seatID: 'C12' }, 
-            ],
+            // 訂票紀錄 - 注意：原始資料使用 shwingID 而不是 showingID
+            bookingrecord: [
+                { orderID: 'O10001', ticketID: 'K1A001', memberID: 'A123456789', showingID: 'S00001', orderStateID: 'S00001', mealsID: 'M00001', ticketTypeID: 'T00001', bookingTime: '2025-12-01 10:30:00', seatID: 'A01' },
+                { orderID: 'O10001', ticketID: 'K1A002', memberID: 'A123456789', showingID: 'S00001', orderStateID: 'S00001', mealsID: 'M00004', ticketTypeID: 'T00002', bookingTime: '2025-12-01 10:30:00', seatID: 'A02' },
+                { orderID: 'O10002', ticketID: 'K2B001', memberID: 'B234567890', showingID: 'S00002', orderStateID: 'S00005', mealsID: 'M00003', ticketTypeID: 'T00001', bookingTime: '2025-12-02 12:45:00', seatID: 'B05' },
+                { orderID: 'O10003', ticketID: 'K3C001', memberID: 'C345678901', showingID: 'S00004', orderStateID: 'S00004', mealsID: 'M00005', ticketTypeID: 'T00003', bookingTime: '2025-12-03 09:10:00', seatID: 'D01' },
+                { orderID: 'O10004', ticketID: 'K4D001', memberID: 'D456789012', showingID: 'S00003', orderStateID: 'S00001', mealsID: 'M00001', ticketTypeID: 'T00004', bookingTime: '2025-12-04 15:20:00', seatID: 'C10' }
+            ]
         };
 
         // 調整插入順序以滿足外鍵要求
@@ -192,6 +266,7 @@ app.post('/api/init-sample-data', async (req, res) => {
         ];
 
         let insertCount = 0;
+        let skippedCount = 0;
         
         for (const table of insertionOrder) {
             const records = sampleData[table];
@@ -199,13 +274,13 @@ app.post('/api/init-sample-data', async (req, res) => {
             
             for (const record of records) {
                 try {
-                    // 這裡使用 db.insert，因為您的原始代碼使用這個單筆插入迴圈
                     await db.insert(table, record); 
                     insertCount++;
                 } catch (error) {
                     // 忽略重複鍵錯誤
-                    if (!error.message.includes('UNIQUE constraint failed')) {
-                        // 輸出所有非 UNIQUE 錯誤，以供除錯
+                    if (error.message.includes('UNIQUE constraint failed')) {
+                        skippedCount++;
+                    } else {
                         console.error(`❌ 插入 ${table} 資料失敗:`, error.message, record);
                         throw new Error(`初始化資料庫失敗 (${table}): ${error.message}`);
                     }
@@ -214,9 +289,17 @@ app.post('/api/init-sample-data', async (req, res) => {
         }
 
         res.json({
-            message: '範例資料初始化完成 (已修正外鍵依賴和表格名稱)',
+            message: '真實資料初始化完成 (從 DataBase 資料夾轉換)',
             inserted_records: insertCount,
-            tables_initialized: Object.keys(sampleData).length
+            skipped_duplicates: skippedCount,
+            tables_initialized: Object.keys(sampleData).length,
+            summary: {
+                cinemas: sampleData.cinema.length,
+                movies: sampleData.movie.length,
+                members: sampleData.member.length,
+                showings: sampleData.showing.length,
+                bookings: sampleData.bookingrecord.length
+            }
         });
 
     } catch (error) {

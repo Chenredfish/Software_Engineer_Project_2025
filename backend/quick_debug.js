@@ -39,8 +39,8 @@ async function quickTest() {
   // 2. 查詢特定影城詳細資訊
   console.log('=== 2. 特定影城查詢 ===');
   try {
-    const cinema = await callAPI('/api/cinemas/C001');
-    console.log('威秀板橋店詳細資訊:');
+    const cinema = await callAPI('/api/cinemas/C00001');
+    console.log('台北旗艦影城詳細資訊:');
     console.log(`  名稱: ${cinema.cinemaName}`);
     console.log(`  地址: ${cinema.cinemaAddress}`);
     console.log(`  電話: ${cinema.cinemaPhoneNumber}`);
@@ -69,8 +69,8 @@ async function quickTest() {
   // 4. 查詢特定電影詳細資訊
   console.log('=== 4. 特定電影查詢 ===');
   try {
-    const movie = await callAPI('/api/movies/M001');
-    console.log('阿凡達：水之道 詳細資訊:');
+    const movie = await callAPI('/api/movies/D00001');
+    console.log('阿凡達 詳細資訊:');
     console.log(`  片名: ${movie.movieName}`);
     console.log(`  片長: ${movie.movieTime}`);
     console.log(`  分級: ${movie.ratedID}`);

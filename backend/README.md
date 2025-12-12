@@ -218,59 +218,150 @@ fetch('http://localhost:3000/api/movies', {
 #### 座位管理
 - **查詢場次座位**: `GET /api/seats/:showingID`
 
-### 需要添加的功能 🔧
+### 待實作的 API 功能 🔧
 
-#### 1. 輸入驗證系統
-- **驗證中間件**: 缺少請求資料格式驗證
-- **資料完整性檢查**: 防止無效或惡意資料
-- **錯誤訊息標準化**: 統一驗證錯誤回應格式
+根據前端 `Print.md` 需求分析，以下 API 為前端組件正常運作的必要功能：
 
-#### 2. API 回應標準化
-- **統一回應格式**: 成功/錯誤回應格式不一致
-- **狀態碼標準化**: HTTP 狀態碼使用需要規範化
-- **回應時間戳**: 缺少時間戳記
+#### 🔐 **第一優先級：身份驗證系統** (對應 L1-L16, M1-M19)
+```javascript
+// 會員登入系統 (支援 LoginPrints.jsx)
+POST   /api/auth/login              // 會員登入驗證
+POST   /api/auth/logout             // 會員登出
+POST   /api/auth/forgot-password    // 忘記密碼申請
+POST   /api/auth/reset-password     // 重設密碼確認
+POST   /api/auth/verify-code        // 驗證碼確認
 
-#### 3. 分頁和搜尋功能
-- **資料分頁**: 大量資料時的效能優化
-- **關鍵字搜尋**: 按名稱、內容搜尋功能
-- **排序功能**: 多欄位排序支援
-- **篩選功能**: 按條件篩選資料
+// 會員註冊系統 (支援 SignPrints.jsx)
+POST   /api/auth/register           // 會員註冊
+POST   /api/auth/send-verification  // 發送驗證郵件
+POST   /api/auth/verify-email       // 郵件驗證確認
+```
 
-#### 4. 關聯查詢 API
-- **影城電影查詢**: `GET /api/cinemas/:id/movies` (文件中提到但未實作)
-- **電影場次查詢**: `GET /api/movies/:id/showings` (文件中提到但未實作)
-- **會員訂票查詢**: `GET /api/members/:id/bookings` (文件中提到但未實作)
+#### 👤 **第二優先級：會員管理功能** (對應 M1-M19)
+```javascript
+// 會員資料操作 (支援 MemberChangePrints.jsx)
+PUT    /api/members/:id             // 更新會員基本資料
+PUT    /api/members/:id/password    // 修改會員密碼
+POST   /api/members/:id/topup       // 會員儲值功能
+GET    /api/members/:id/profile     // 會員完整資料查詢
+PUT    /api/members/:id/profile     // 會員資料修改
 
-#### 5. 批量操作
-- **批量新增**: 一次新增多筆資料
-- **批量更新**: 一次更新多筆資料
-- **批量刪除**: 一次刪除多筆資料
+// 會員訂票記錄 (支援 InquiryPrints.jsx)
+GET    /api/members/:id/bookings    // 查詢會員所有訂票記錄
+GET    /api/members/:id/bookings/active  // 查詢有效訂票
+GET    /api/members/:id/bookings/history // 查詢歷史訂票
+```
 
-#### 6. 進階功能
-- **座位狀態更新**: `PUT /api/seats/:showingID/:seatNumber` (文件中提到但未實作)
-- **會員認證**: JWT token 驗證機制
-- **資料備份**: 自動或手動備份功能
-- **日誌記錄**: 操作日誌追蹤
+#### 🎫 **第三優先級：訂票業務邏輯** (對應 B1-B34, In1-In12)
+```javascript
+// 訂票流程管理 (支援 BookPrints.jsx)
+POST   /api/bookings/create         // 建立新訂票
+PUT    /api/bookings/:id/cancel     // 取消訂票
+PUT    /api/bookings/:id/refund     // 申請退票
+PUT    /api/bookings/:id/confirm    // 確認訂票
+GET    /api/bookings/:id/status     // 查詢訂票狀態
 
-#### 7. 業務邏輯增強
-- **訂票流程驗證**: 檢查座位可用性、票數限制
-- **會員點數系統**: 點數累積和使用
-- **電影推薦**: 基於觀看紀錄的推薦
-- **收入統計**: 票房和營收統計 API
+// 訂票查詢功能 (支援 InquiryPrints.jsx)
+GET    /api/bookings/search         // 多條件搜尋訂票
+GET    /api/bookings/code/:code     // 訂票代碼查詢
+POST   /api/bookings/validate       // 驗證訂票資訊
+PUT    /api/bookings/:id/collect    // 取票處理
 
-### 現有程式碼參考位置
+// 票券生成系統
+POST   /api/tickets/generate        // 生成取票代碼
+GET    /api/tickets/:code/info      // 查詢票券資訊
+PUT    /api/tickets/:code/collect   // 標記已取票
+GET    /api/tickets/:code/status    // 票券狀態查詢
+```
 
-#### 基礎錯誤處理
-- **位置**: `server.js:470-490` (全域錯誤處理和404處理)
-- **功能**: 基本的錯誤捕獲和回應
+#### 🎬 **第四優先級：業務關聯查詢** (對應 Br1-Br26)
+```javascript
+// 影城電影關聯 (支援 BrowsePrints.jsx)
+GET    /api/cinemas/:id/movies      // 查詢影城上映電影
+GET    /api/cinemas/:id/theaters    // 查詢影城所有影廳
+GET    /api/movies/:id/showings     // 查詢電影所有場次
+GET    /api/movies/:id/cinemas      // 查詢電影放映影城
 
-#### 資料隱藏處理
-- **位置**: `server.js:290-300` (會員密碼隱藏)
-- **範例**: 查詢會員時自動隱藏敏感欄位
+// 場次座位管理
+GET    /api/showings/:id/seats      // 查詢場次座位狀態
+PUT    /api/seats/:showingID/:seat  // 更新座位狀態
+POST   /api/seats/reserve           // 預約座位
+POST   /api/seats/release           // 釋放座位
+```
 
-#### 條件查詢
-- **位置**: `server.js:440-460` (管理員登入驗證)
-- **範例**: 多條件資料庫查詢
+#### ⚙️ **第五優先級：管理員功能** (對應 C1-C9)
+```javascript
+// 管理員系統 (支援 ControllerPrints.jsx)
+GET    /api/admin/dashboard         // 管理員儀表板數據
+GET    /api/admin/bookings         // 所有訂票管理
+GET    /api/admin/members          // 所有會員管理
+PUT    /api/admin/bookings/:id     // 管理員修改訂票
+DELETE /api/admin/bookings/:id     // 管理員刪除訂票
+
+// 資料統計分析
+GET    /api/statistics/revenue     // 營收統計
+GET    /api/statistics/popular     // 熱門電影統計
+GET    /api/statistics/occupancy   // 座位使用率
+```
+
+#### 🔧 **技術增強功能**
+```javascript
+// API 回應標準化
+- 統一回應格式: { success: boolean, data: any, message: string, timestamp: string }
+- 錯誤代碼標準: 使用語意化的錯誤代碼
+- 分頁支援: ?page=1&limit=10&sort=createdAt&order=desc
+
+// 輸入驗證
+- 請求資料格式驗證
+- SQL 注入防護
+- XSS 攻擊防護
+- 速率限制 (Rate Limiting)
+
+// 進階功能
+- JWT Token 認證
+- 會話管理 (Session Management)
+- 操作日誌記錄
+- 快取機制 (Redis)
+```
+
+### 🎯 **實作優先順序建議**
+
+1. **立即需要** (支援前端登入): 身份驗證系統
+2. **本週內** (支援前端訂票): 會員管理 + 訂票業務
+3. **下週** (支援前端查詢): 關聯查詢 + 票券系統
+4. **後續** (完善系統): 管理員功能 + 統計分析
+
+### 📊 **前端支援狀況分析**
+
+#### ✅ **完全支援的前端組件**
+- **BrowsePrints.jsx**: 影城列表、電影列表、分級版本查詢 (95% 支援)
+- **系統基礎功能**: 資料庫連接、範例資料、參考資料查詢
+
+#### ⚠️ **部分支援的前端組件** 
+- **InquiryPrints.jsx**: 基本訂票查詢 ✅，缺少代碼查詢、退票功能 ❌
+- **BookPrints.jsx**: 基本訂票建立 ✅，缺少完整訂票流程、付款處理 ❌
+- **MemberChangePrints.jsx**: 會員資料查詢 ✅，缺少資料修改、儲值功能 ❌
+
+#### ❌ **無法支援的前端組件**
+- **LoginPrints.jsx**: 缺少會員登入系統 (只有管理員登入)
+- **SignPrints.jsx**: 缺少會員註冊流程
+- **ControllerPrints.jsx**: 缺少完整管理員功能
+
+### 🔗 **現有程式碼參考位置**
+
+#### 身份驗證範例
+- **管理員登入**: `server.js:572-590` - 可參考實作會員登入
+- **密碼驗證**: 使用明文比對，建議改為 hash 驗證
+
+#### 資料操作範例
+- **CRUD 完整實作**: `server.js:250-520` (影城、電影、會員、場次)
+- **資料隱藏處理**: `server.js:333-340` (會員密碼自動隱藏)
+- **關聯查詢基礎**: 已有 foreign key 設計，可擴展關聯 API
+
+#### 錯誤處理機制
+- **統一錯誤格式**: `res.status(500).json({ error: '錯誤訊息', details: error.message })`
+- **404 處理**: 查詢不存在資源時的標準回應
+- **資料驗證**: `if (!account || !password)` 基本驗證模式
 
 ## 注意事項
 
