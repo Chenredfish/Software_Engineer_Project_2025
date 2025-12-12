@@ -10,7 +10,15 @@ function callAPI(endpoint) {
       res.on('data', (chunk) => data += chunk);
       res.on('end', () => {
         try {
-          resolve(JSON.parse(data));
+          const parsedData = JSON.parse(data);
+          // 如果狀態碼不是 2xx，標記為失敗
+          if (res.statusCode >= 400) {
+            parsedData.success = false;
+            if (!parsedData.error) {
+              parsedData.error = `HTTP ${res.statusCode}`;
+            }
+          }
+          resolve(parsedData);
         } catch (e) {
           resolve(data);
         }
@@ -314,7 +322,7 @@ async function quickTest() {
     }
     
     console.log('9d. 測試未登入狀態存取受保護資源 (應該失敗):');
-    const unauthorizedResult = await postAPI('/api/auth/profile', {});
+    const unauthorizedResult = await callAPI('/api/auth/profile'); // 使用 GET 請求
     
     if (!unauthorizedResult.success) {
       console.log(`  ✅ 正確阻擋未登入存取: ${unauthorizedResult.error}`);

@@ -1,240 +1,430 @@
-# 威秀影城後端系統
+# 威秀影城後端系統 (重構版 v2.0)
 
-簡易的 Node.js + Express + SQLite 後端管理系統
+基於 Node.js + Express + SQLite 的影城管理系統，採用模組化架構設計。
 
 ## 快速開始
 
-### 1. 安裝依賴
 ```bash
+# 1. 安裝依賴
 npm install
-```
 
-### 2. 啟動伺服器
-```bash
-# 開發模式（推薦，自動重啟）
-npm run dev
-
-# 正式模式
+# 2. 啟動伺服器
 npm start
 
-# API 測試
+# 3. API 測試
 npm run test
 ```
 
-### 3. 測試服務
-啟動後訪問：
-- 服務狀態：http://localhost:3000
-- API 文件：http://localhost:3000/api
-- 連線測試：http://localhost:3000/api/test
+啟動後訪問：http://localhost:3000
 
-### 特色
-- **即開即用**：無需安裝 MySQL 或其他資料庫服務
-- **檔案型資料庫**：SQLite 資料庫自動建立為 `moviesql.db`
-- **自動初始化**：首次啟動會自動建立所有資料表和範例資料
-- **完整功能**：支援所有 CRUD 操作和業務邏輯
-- **優雅關閉**：Ctrl+C 時自動關閉資料庫連線
-- **錯誤處理**：完整的 404 和 500 錯誤處理機制
+## 完整 API 文檔
 
-## 主要 API 路由
+### 🔐 會員認證系統 (Authentication)
 
-### 系統功能
-- `GET /` - 系統狀態
-- `GET /api` - API 文件
-- `GET /api/test` - 測試資料庫連接
-- `POST /api/init-sample-data` - 初始化範例資料
+#### POST `/api/auth/register` - 會員註冊
+```javascript
+{
+  memberID: "F123456789",        // 身分證字號 (必填)
+  memberAccount: "test_user",    // 會員帳號 (必填, 最大50字元)
+  memberPwd: "password123",      // 會員密碼 (必填, 最大50字元) 
+  memberName: "測試用戶",        // 會員姓名 (必填, 最多10字元)
+  memberBirth: "1990-01-01",     // 生日 (必填, YYYY-MM-DD)
+  memberPhone: "0912345678"      // 電話 (必填, 10位數字 09xxxxxxxx)
+}
+```
 
-### 核心業務 API
+#### POST `/api/auth/login` - 會員登入
+```javascript
+{
+  account: "test_user",          // 會員帳號
+  password: "password123"        // 會員密碼
+}
+```
 
-**影城管理**
-- `GET /api/cinemas` - 查詢所有影城
-- `GET /api/cinemas/:id` - 查詢特定影城  
-- `POST /api/cinemas` - 新增影城
-- `PUT /api/cinemas/:id` - 更新影城
-- `DELETE /api/cinemas/:id` - 刪除影城
+#### POST `/api/auth/logout` - 會員登出 🔒
+需要登入狀態，會清除 session token
 
-**電影管理**
-- `GET /api/movies` - 查詢所有電影
-- `GET /api/movies/:id` - 查詢特定電影
-- `POST /api/movies` - 新增電影
-- `PUT /api/movies/:id` - 更新電影
-- `DELETE /api/movies/:id` - 刪除電影
+#### GET `/api/auth/profile` - 獲取個人資料 🔒
+返回當前登入會員的完整資料
 
-**會員管理**
-- `GET /api/members` - 查詢所有會員
-- `GET /api/members/:id` - 查詢特定會員
-- `POST /api/members` - 新增會員
+#### POST `/api/auth/check-account` - 檢查帳號可用性
+```javascript
+{
+  account: "test_user"           // 要檢查的會員帳號
+}
+```
 
-**場次管理**
-- `GET /api/showings` - 查詢所有場次
-- `GET /api/showings/:id` - 查詢特定場次
-- `POST /api/showings` - 新增場次
+### 🎬 電影管理 (Movies)
 
-**訂票系統**
-- `GET /api/bookings` - 查詢所有訂票紀錄
-- `POST /api/bookings` - 新增訂票紀錄
-- `GET /api/seats/:showingID` - 查詢場次座位
+#### GET `/api/movies` - 查詢所有電影
+#### GET `/api/movies/:id` - 查詢單一電影
+#### POST `/api/movies` - 新增電影
+```javascript
+{
+  movieID: "M00001",            // 電影ID (6字元)
+  movieName: "玩命關頭10",      // 電影名稱 (最大50字元)
+  movieLength: 120,             // 電影長度 (分鐘)
+  movieInfo: "動作片...",       // 電影介紹
+  moviePhoto: "path/to/image",  // 電影海報路徑
+  ratedID: "R00001",           // 分級ID
+  versionID: "V00001",         // 版本ID
+  movieDate: "2024-01-01",     // 上映日期
+  moviePrice: 350              // 基礎票價
+}
+```
+#### PUT `/api/movies/:id` - 更新電影資料
+#### DELETE `/api/movies/:id` - 刪除電影
 
-**影廳管理**
-- `GET /api/theaters` - 查詢所有影廳
-- `POST /api/theaters` - 新增影廳
+### 🏢 影城管理 (Cinemas)
 
-### 參考資料 API
-- `GET /api/rated` - 查詢電影分級
-- `GET /api/versions` - 查詢電影版本
-- `GET /api/meals` - 查詢餐點
-- `GET /api/ticketclasses` - 查詢票種
-- `GET /api/orderstatus` - 查詢訂單狀態
+#### GET `/api/cinemas` - 查詢所有影城
+#### GET `/api/cinemas/:id` - 查詢單一影城
+#### POST `/api/cinemas` - 新增影城
+```javascript
+{
+  cinemaID: "C00001",          // 影城ID (6字元)
+  cinemaName: "威秀信義店",     // 影城名稱 (最大50字元)
+  cinemaLocation: "台北信義區", // 影城地址
+  cinemaPhone: "02-12345678",   // 影城電話
+  totalHalls: 12,              // 總廳數
+  totalSeats: 2400             // 總座位數
+}
+```
+#### PUT `/api/cinemas/:id` - 更新影城資料
+#### DELETE `/api/cinemas/:id` - 刪除影城
 
-### 管理功能
-- `POST /api/admin/login` - 管理員登入（帳號：admin, 密碼：admin123）
+### 👥 會員管理 (Members)
 
-## 使用範例
+#### GET `/api/members` - 查詢所有會員 (管理用)
+#### GET `/api/members/:id` - 查詢單一會員 🔒
+#### POST `/api/members` - 新增會員 (同註冊)
+#### PUT `/api/members/:id` - 更新會員資料 🔒
+#### DELETE `/api/members/:id` - 刪除會員
+#### POST `/api/members/:id/topup` - 會員加值 🔒
+```javascript
+{
+  amount: 1000                 // 加值金額
+}
+```
+
+### 📅 場次管理 (Showings)
+
+#### GET `/api/showings` - 查詢所有場次
+#### GET `/api/showings/:id` - 查詢單一場次
+#### POST `/api/showings` - 新增場次
+```javascript
+{
+  showingID: "S00001",         // 場次ID (6字元)
+  movieID: "M00001",           // 電影ID
+  cinemaID: "C00001",          // 影城ID
+  showingDate: "2024-01-01",   // 場次日期
+  showingTime: "14:30:00",     // 場次時間
+  hallNumber: 3,               // 廳號
+  totalSeats: 200,             // 總座位數
+  availableSeats: 150          // 可用座位數
+}
+```
+#### PUT `/api/showings/:id` - 更新場次資料
+#### DELETE `/api/showings/:id` - 刪除場次
+#### GET `/api/showings/:showingID/seats` - 查詢座位狀況
+#### PUT `/api/showings/:showingID/seats/:seatNumber` - 更新座位狀態
+
+### 🎫 訂票記錄 (Bookings)
+
+#### GET `/api/bookings` - 查詢所有訂票記錄 (管理用)
+#### GET `/api/bookings/:id` - 查詢單一訂票記錄
+#### POST `/api/bookings` - 建立訂票記錄 🔒
+```javascript
+{
+  memberID: "F123456789",      // 會員身分證號
+  showingID: "S00001",         // 場次ID
+  ticketClassID: "T00001",     // 票種ID
+  mealsID: "M00001",           // 餐點ID (可選)
+  seatNumbers: "A1,A2,A3",     // 座位號碼
+  totalPrice: 960,             // 總金額
+  orderStatusID: "S00001"      // 訂單狀態ID
+}
+```
+#### GET `/api/bookings/member/:memberID` - 查詢會員訂票記錄 🔒
+#### PUT `/api/bookings/:id` - 更新訂票記錄 🔒
+#### DELETE `/api/bookings/:id` - 取消訂票記錄 🔒
+
+### 📖 參考資料管理 (Reference Data)
+
+#### 電影分級 (Rated)
+- **GET** `/api/rated` - 查詢所有電影分級
+- **POST** `/api/rated` - 新增電影分級
+
+#### 電影版本 (Versions)
+- **GET** `/api/versions` - 查詢所有電影版本
+- **POST** `/api/versions` - 新增電影版本
+
+#### 餐點管理 (Meals)
+- **GET** `/api/meals` - 查詢所有餐點
+- **POST** `/api/meals` - 新增餐點
+```javascript
+{
+  mealsID: "M00001",           // 餐點ID (6字元)
+  mealName: "爆米花套餐",       // 餐點名稱 (最大50字元)
+  mealsPrice: 250,             // 餐點價格
+  mealsDisp: "經典爆米花..."   // 餐點描述
+}
+```
+
+#### 票種管理 (Ticket Classes)
+- **GET** `/api/ticketclasses` - 查詢所有票種
+- **POST** `/api/ticketclasses` - 新增票種
+```javascript
+{
+  ticketClassID: "T00001",     // 票種ID (6字元)
+  ticketClassName: "全票",      // 票種名稱 (最大50字元)
+  ticketClassPrice: 320,       // 票種價格
+  ticketInfo: "成人票價"       // 票種說明
+}
+```
+
+#### 訂單狀態 (Order Status)
+- **GET** `/api/orderstatus` - 查詢所有訂單狀態
+- **POST** `/api/orderstatus` - 新增訂單狀態
+
+### 👨‍💼 管理員系統 (Admin)
+
+#### POST `/api/admin/login` - 管理員登入
+```javascript
+{
+  account: "admin",            // 管理員帳號
+  password: "admin123"         // 管理員密碼
+}
+```
+
+#### GET `/api/admin` - 查詢所有管理員
+#### POST `/api/admin/create` - 建立管理員帳號
+
+### 🛠️ 系統工具 (Utilities)
+
+#### GET `/api/test` - 測試資料庫連接
+返回資料庫連接狀態與各表格資料統計
+
+#### POST `/api/init-sample-data` - 初始化範例資料
+建立完整的測試資料集，包含所有表格的範例資料
+
+## 快速測試指令
 
 ### PowerShell 測試指令
 
 ```powershell
-# 測試資料庫連接
-Invoke-RestMethod -Uri "http://localhost:3000/api/test"
+# 測試系統狀態
+Invoke-RestMethod -Uri "http://localhost:3000"
 
 # 初始化範例資料
 Invoke-RestMethod -Uri "http://localhost:3000/api/init-sample-data" -Method POST
 
-# 查詢所有影城
-Invoke-RestMethod -Uri "http://localhost:3000/api/cinemas"
+# 會員註冊
+$registerData = @{
+  memberID = "F123456789"
+  memberAccount = "test_user"
+  memberPwd = "password123" 
+  memberName = "測試用戶"
+  memberBirth = "1990-01-01"
+  memberPhone = "0912345678"
+} | ConvertTo-Json
+Invoke-RestMethod -Uri "http://localhost:3000/api/auth/register" -Method POST -Body $registerData -ContentType "application/json"
 
-# 查詢所有電影
+# 會員登入
+$loginData = @{ account = "test_user"; password = "password123" } | ConvertTo-Json
+$loginResponse = Invoke-RestMethod -Uri "http://localhost:3000/api/auth/login" -Method POST -Body $loginData -ContentType "application/json"
+
+# 查詢電影列表
 Invoke-RestMethod -Uri "http://localhost:3000/api/movies"
 
-# 查詢所有會員
-Invoke-RestMethod -Uri "http://localhost:3000/api/members"
-
-# 查詢所有場次
+# 查詢場次列表
 Invoke-RestMethod -Uri "http://localhost:3000/api/showings"
 
-# 查詢所有訂票紀錄
-Invoke-RestMethod -Uri "http://localhost:3000/api/bookings"
-
-# 查詢電影分級
-Invoke-RestMethod -Uri "http://localhost:3000/api/rated"
-
-#查詢板橋大遠百 (C001) 正在上映的電影
-Invoke-RestMethod -Uri "http://localhost:3000/api/cinemas/C001/movies"
-
-#查詢電影 阿凡達 (M001) 的所有放映地點和時間：
-Invoke-RestMethod -Uri "http://localhost:3000/api/movies/M001/showings"
-
-# 管理員登入
-$body = @{ account = "admin"; password = "admin123" } | ConvertTo-Json
-Invoke-RestMethod -Uri "http://localhost:3000/api/admin/login" -Method POST -Body $body -ContentType "application/json"
+# 新增餐點
+$mealData = @{
+  mealsID = "M99999"
+  mealName = "測試餐點"
+  mealsPrice = 150
+  mealsDisp = "這是一個測試用餐點"
+} | ConvertTo-Json
+Invoke-RestMethod -Uri "http://localhost:3000/api/meals" -Method POST -Body $mealData -ContentType "application/json"
 ```
 
-### 管理員登入
+### JavaScript 使用範例
+
 ```javascript
-fetch('http://localhost:3000/api/admin/login', {
+// 會員註冊
+const registerResponse = await fetch('http://localhost:3000/api/auth/register', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    account: 'admin',
-    password: 'admin123'
+    memberID: 'F123456789',
+    memberAccount: 'test_user',
+    memberPwd: 'password123',
+    memberName: '測試用戶',
+    memberBirth: '1990-01-01',
+    memberPhone: '0912345678'
   })
-})
-.then(res => res.json())
-.then(data => console.log(data));
-```
+});
 
-### 查詢電影列表
-```javascript
-fetch('http://localhost:3000/api/movies')
-.then(res => res.json())
-.then(data => console.log(data.data));
-```
-
-### 新增電影
-```javascript
-fetch('http://localhost:3000/api/movies', {
+// 會員登入
+const loginResponse = await fetch('http://localhost:3000/api/auth/login', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    title: '復仇者聯盟',
-    genre: '動作',
-    duration: 180,
-    rating: 'PG-13',
-    description: '超級英雄電影'
+    account: 'test_user',
+    password: 'password123'
   })
-})
-.then(res => res.json())
-.then(data => console.log(data));
+});
+
+const loginData = await loginResponse.json();
+const token = loginData.token; // 用於後續需要認證的請求
+
+// 查詢個人資料 (需要認證)
+const profileResponse = await fetch('http://localhost:3000/api/auth/profile', {
+  headers: { 
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+// 建立訂票記錄 (需要認證)
+const bookingResponse = await fetch('http://localhost:3000/api/bookings', {
+  method: 'POST',
+  headers: { 
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    memberID: 'F123456789',
+    showingID: 'S00001',
+    ticketClassID: 'T00001',
+    seatNumbers: 'A1,A2',
+    totalPrice: 640,
+    orderStatusID: 'S00001'
+  })
+});
+
+// 查詢電影列表 (不需認證)
+const moviesResponse = await fetch('http://localhost:3000/api/movies');
+const movies = await moviesResponse.json();
 ```
 
-## 系統需求
+## 資料格式規格
 
-- Node.js 14+
-- 無需額外資料庫安裝（使用 SQLite）
+根據使用者設計的資料表格式，所有 API 都已實現完整的輸入驗證：
 
-## 免費部署選項
+### 會員 (member) 資料格式
+- **memberID**: 身分證字號 (10字元, 台灣格式)
+- **memberAccount**: 會員帳號 (最大50字元)
+- **memberPwd**: 會員密碼 (最大50字元)
+- **memberName**: 會員姓名 (最多10字元)
+- **memberPhone**: 會員電話 (10位數字, 09xxxxxxxx)
+- **memberBalance**: 帳號餘額 (最大100萬)
 
-### Heroku (推薦)
-1. 安裝 Heroku CLI
-2. `heroku create your-app-name`
-3. `git push heroku main`
-4. SQLite 檔案會自動建立
+### ID 格式統一規則
+- 所有 ID 都為 **6 字元**（電影ID、影城ID、餐點ID等）
+- 名稱欄位統一為 **50 字元**
+- 描述欄位統一為 **2000 字元**  
+- 價格金額上限為 **100 萬**
 
-### Railway
-1. 連接 GitHub repo
-2. 自動部署
-3. SQLite 檔案會自動建立
+### 完整資料格式規格
 
-### Render
-1. 連接 GitHub
-2. 選擇 Web Service
-3. 自動建置和部署
-4. SQLite 資料庫無需額外設定
+#### 電影 (movie) 資料格式
+- **movieID**: 電影ID (6字元, 必填)
+- **movieName**: 電影名稱 (最大50字元, 必填)
+- **movieLength**: 電影長度 (分鐘, 數字)
+- **movieInfo**: 電影介紹 (最大2000字元)
+- **moviePhoto**: 電影海報路徑 (字串)
+- **ratedID**: 分級ID (6字元, 必填)
+- **versionID**: 版本ID (6字元, 必填)
+- **movieDate**: 上映日期 (YYYY-MM-DD格式)
+- **moviePrice**: 基礎票價 (數字, 最大100萬)
+
+#### 影城 (cinema) 資料格式
+- **cinemaID**: 影城ID (6字元, 必填)
+- **cinemaName**: 影城名稱 (最大50字元, 必填)
+- **cinemaLocation**: 影城地址 (最大100字元)
+- **cinemaPhone**: 影城電話 (字串)
+- **totalHalls**: 總廳數 (數字)
+- **totalSeats**: 總座位數 (數字)
+
+#### 場次 (showing) 資料格式
+- **showingID**: 場次ID (6字元, 必填)
+- **movieID**: 電影ID (6字元, 必填)
+- **cinemaID**: 影城ID (6字元, 必填)
+- **showingDate**: 場次日期 (YYYY-MM-DD格式, 必填)
+- **showingTime**: 場次時間 (HH:MM:SS格式, 必填)
+- **hallNumber**: 廳號 (數字, 必填)
+- **totalSeats**: 總座位數 (數字)
+- **availableSeats**: 可用座位數 (數字)
+
+#### 訂票記錄 (booking) 資料格式
+- **bookingID**: 訂票ID (6字元, 自動生成)
+- **memberID**: 會員身分證號 (10字元, 必填)
+- **showingID**: 場次ID (6字元, 必填)
+- **ticketClassID**: 票種ID (6字元, 必填)
+- **mealsID**: 餐點ID (6字元, 可選)
+- **seatNumbers**: 座位號碼 (字串, 如"A1,A2,A3")
+- **totalPrice**: 總金額 (數字, 必填)
+- **orderStatusID**: 訂單狀態ID (6字元, 必填)
+- **bookingDate**: 訂票日期 (自動生成)
+
+#### 餐點 (meals) 資料格式
+- **mealsID**: 餐點ID (6字元, 必填)
+- **mealName**: 餐點名稱 (最大50字元, 必填)
+- **mealsPrice**: 餐點價格 (數字, 必填)
+- **mealsDisp**: 餐點描述 (最大2000字元)
+- **mealsPhoto**: 餐點照片路徑 (字串)
+
+#### 票種 (ticketclass) 資料格式
+- **ticketClassID**: 票種ID (6字元, 必填)
+- **ticketClassName**: 票種名稱 (最大50字元, 必填)
+- **ticketClassPrice**: 票種價格 (數字, 必填)
+- **ticketInfo**: 票種說明 (最大2000字元)
 
 ## 功能實作狀態
 
 ### 已完成功能 ✅
 
-#### 核心 CRUD 操作
-- **影城管理**: 完整 CRUD (查詢/新增/修改/刪除)
-- **電影管理**: 完整 CRUD (查詢/新增/修改/刪除)
-- **會員管理**: 基礎 CRUD (查詢/新增，已隱藏密碼欄位)
-- **場次管理**: 基礎 CRUD (查詢/新增)
-- **訂票管理**: 基礎操作 (查詢/新增)
-- **影廳管理**: 基礎操作 (查詢/新增)
+#### 身分驗證系統 (完整實作)
+- `POST /api/auth/login` - 會員登入驗證
+- `POST /api/auth/register` - 會員註冊 (支援身分證字號主鍵)
+- `POST /api/auth/logout` - 會員登出 (需登入)
+- `GET /api/auth/profile` - 獲取個人資料 (需登入)
+- `POST /api/auth/check-account` - 檢查帳號可用性
 
-#### 系統功能
-- **資料庫連線測試**: `GET /api/test`
-- **範例資料初始化**: `POST /api/init-sample-data`
-- **管理員登入**: `POST /api/admin/login`
-- **API 文件**: `GET /api`
+#### 資料表管理 API (符合資料格式規格)
+- `GET|POST /api/meals` - 餐點管理 (格式驗證)
+- `GET|POST /api/ticketclasses` - 票種管理 (格式驗證)
+- `GET|POST|PUT|DELETE /api/cinemas` - 影城管理 (格式驗證)
+- `GET|POST|PUT|DELETE /api/movies` - 電影管理 (格式驗證)
+- `GET|POST|PUT|DELETE /api/showings` - 場次管理
+- `GET|POST|PUT|DELETE /api/bookings` - 訂票管理 (需登入)
+- `GET|PUT /api/members` - 會員管理 (安全控制)
 
-#### 參考資料查詢
-- **電影分級**: `GET /api/rated`
-- **電影版本**: `GET /api/versions`
-- **餐點**: `GET /api/meals`
-- **票種**: `GET /api/ticketclasses`
-- **訂單狀態**: `GET /api/orderstatus`
+#### 安全功能
+- Session Token 驗證中間件
+- 輸入格式驗證 (根據資料規格)
+- 權限控制 (只能存取自己的資料)
+- 密碼欄位自動隱藏
 
-#### 座位管理
-- **查詢場次座位**: `GET /api/seats/:showingID`
+### 待實作 API 🔧
 
-### 待實作的 API 功能 🔧
-
-根據前端 `Print.md` 需求分析，以下 API 為前端組件正常運作的必要功能：
-
-#### 🔐 **第一優先級：身份驗證系統** (對應 L1-L16, M1-M19)
+#### 高優先級
 ```javascript
-// 會員登入系統 (支援 LoginPrints.jsx)
-POST   /api/auth/login              // 會員登入驗證
-POST   /api/auth/logout             // 會員登出
-POST   /api/auth/forgot-password    // 忘記密碼申請
-POST   /api/auth/reset-password     // 重設密碼確認
-POST   /api/auth/verify-code        // 驗證碼確認
+// 會員進階功能
+PUT    /api/members/:id/password    // 修改密碼
+POST   /api/members/:id/topup       // 會員儲值
 
-// 會員註冊系統 (支援 SignPrints.jsx)
-POST   /api/auth/register           // 會員註冊
-POST   /api/auth/send-verification  // 發送驗證郵件
-POST   /api/auth/verify-email       // 郵件驗證確認
+// 訂票業務邏輯
+POST   /api/bookings/create         // 完整訂票流程
+PUT    /api/bookings/:id/cancel     // 取消訂票
+GET    /api/bookings/search         // 多條件搜尋
+
+// 座位管理
+PUT    /api/showings/:id/seats/:seat // 更新座位狀態
+POST   /api/seats/reserve           // 預約座位
 ```
 
 #### 👤 **第二優先級：會員管理功能** (對應 M1-M19)
@@ -289,86 +479,53 @@ POST   /api/seats/reserve           // 預約座位
 POST   /api/seats/release           // 釋放座位
 ```
 
-#### ⚙️ **第五優先級：管理員功能** (對應 C1-C9)
-```javascript
-// 管理員系統 (支援 ControllerPrints.jsx)
-GET    /api/admin/dashboard         // 管理員儀表板數據
-GET    /api/admin/bookings         // 所有訂票管理
-GET    /api/admin/members          // 所有會員管理
-PUT    /api/admin/bookings/:id     // 管理員修改訂票
-DELETE /api/admin/bookings/:id     // 管理員刪除訂票
 
-// 資料統計分析
-GET    /api/statistics/revenue     // 營收統計
-GET    /api/statistics/popular     // 熱門電影統計
-GET    /api/statistics/occupancy   // 座位使用率
+
+## 專案結構
+
+### 檔案結構 (重構後)
+```
+backend/
+├── server.js              # 主伺服器 (重構版)
+├── server_old.js          # 舊版本備份
+├── database.js            # SQLite 資料庫類
+├── quick_debug.js         # API 測試工具
+├── moviesql.db           # SQLite 資料庫檔案
+└── routes/               # API 路由模組
+    ├── auth.js           # 會員認證 API
+    ├── cinema.js         # 影城管理 API 
+    ├── movie.js          # 電影管理 API
+    ├── member.js         # 會員管理 API
+    ├── booking.js        # 訂票管理 API
+    ├── showing.js        # 場次管理 API
+    ├── reference.js      # 參考資料 API
+    └── admin.js          # 管理員 API
 ```
 
-#### 🔧 **技術增強功能**
-```javascript
-// API 回應標準化
-- 統一回應格式: { success: boolean, data: any, message: string, timestamp: string }
-- 錯誤代碼標準: 使用語意化的錯誤代碼
-- 分頁支援: ?page=1&limit=10&sort=createdAt&order=desc
-
-// 輸入驗證
-- 請求資料格式驗證
-- SQL 注入防護
-- XSS 攻擊防護
-- 速率限制 (Rate Limiting)
-
-// 進階功能
-- JWT Token 認證
-- 會話管理 (Session Management)
-- 操作日誌記錄
-- 快取機制 (Redis)
+### API 結構
+```
+/api/auth/*           - 會員認證相關 (routes/auth.js)
+/api/cinemas/*        - 影城管理 (routes/cinema.js)
+/api/movies/*         - 電影管理 (routes/movie.js)
+/api/members/*        - 會員管理 (routes/member.js)
+/api/bookings/*       - 訂票管理 (routes/booking.js)
+/api/showings/*       - 場次管理 (routes/showing.js)
+/api/admin/*          - 管理員功能 (routes/admin.js)
+/api/rated            - 電影分級 (routes/reference.js)
+/api/meals            - 餐點管理 (routes/reference.js)
+/api/ticketclasses    - 票種管理 (routes/reference.js)
 ```
 
-### 🎯 **實作優先順序建議**
-
-1. **立即需要** (支援前端登入): 身份驗證系統
-2. **本週內** (支援前端訂票): 會員管理 + 訂票業務
-3. **下週** (支援前端查詢): 關聯查詢 + 票券系統
-4. **後續** (完善系統): 管理員功能 + 統計分析
-
-### 📊 **前端支援狀況分析**
-
-#### ✅ **完全支援的前端組件**
-- **BrowsePrints.jsx**: 影城列表、電影列表、分級版本查詢 (95% 支援)
-- **系統基礎功能**: 資料庫連接、範例資料、參考資料查詢
-
-#### ⚠️ **部分支援的前端組件** 
-- **InquiryPrints.jsx**: 基本訂票查詢 ✅，缺少代碼查詢、退票功能 ❌
-- **BookPrints.jsx**: 基本訂票建立 ✅，缺少完整訂票流程、付款處理 ❌
-- **MemberChangePrints.jsx**: 會員資料查詢 ✅，缺少資料修改、儲值功能 ❌
-
-#### ❌ **無法支援的前端組件**
-- **LoginPrints.jsx**: 缺少會員登入系統 (只有管理員登入)
-- **SignPrints.jsx**: 缺少會員註冊流程
-- **ControllerPrints.jsx**: 缺少完整管理員功能
-
-### 🔗 **現有程式碼參考位置**
-
-#### 身份驗證範例
-- **管理員登入**: `server.js:572-590` - 可參考實作會員登入
-- **密碼驗證**: 使用明文比對，建議改為 hash 驗證
-
-#### 資料操作範例
-- **CRUD 完整實作**: `server.js:250-520` (影城、電影、會員、場次)
-- **資料隱藏處理**: `server.js:333-340` (會員密碼自動隱藏)
-- **關聯查詢基礎**: 已有 foreign key 設計，可擴展關聯 API
-
-#### 錯誤處理機制
-- **統一錯誤格式**: `res.status(500).json({ error: '錯誤訊息', details: error.message })`
-- **404 處理**: 查詢不存在資源時的標準回應
-- **資料驗證**: `if (!account || !password)` 基本驗證模式
+### 重構優勢
+- **模組化設計**: 不同功能 API 拆分到獨立檔案
+- **更好維護**: 每個檔案只負責一個功能域
+- **清晰結構**: 主 server.js 只負責路由註冊和中間件
+- **方便擴展**: 新增功能只需修改相關檔案
+- **安全控制**: 認證中間件集中管理
 
 ## 注意事項
 
-- **管理員帳號**: `admin` / 密碼: `admin123`
-- **資料庫檔案**: SQLite 會自動建立為 `moviesql.db`
-- **自動初始化**: 首次啟動會自動建立所有資料表和範例資料
-- **安全提醒**: 實際部署時請更改管理員密碼
-- **測試工具**: 可使用 `npm run test` 進行快速API測試
-- **停止服務**: 使用 Ctrl+C 優雅關閉伺服器和資料庫連線
-- **錯誤處理**: 系統包含完整的錯誤處理和 404 響應
+- **管理員帳號**: admin / admin123
+- **資料庫**: 自動建立 SQLite 檔案 (moviesql.db)
+- **測試工具**: `npm run test` 進行 API 測試
+- **重構備份**: 舊版本儲存於 server_old.js
