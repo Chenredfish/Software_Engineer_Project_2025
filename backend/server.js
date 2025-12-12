@@ -31,7 +31,8 @@ app.get('/api', (req, res) => {
       auth: {
         'POST /api/auth/login': '會員登入',
         'POST /api/auth/register': '會員註冊',
-        'POST /api/auth/logout': '會員登出',
+        'POST /api/auth/logout': '會員登出 (需登入)',
+        'GET /api/auth/profile': '獲取個人資料 (需登入)',
         'POST /api/auth/check-account': '檢查帳號可用性',
         'POST /api/admin/login': '管理員登入'
       },
@@ -340,10 +341,75 @@ app.get('/api/cinemas/:id', async (req, res) => {
 
 app.post('/api/cinemas', async (req, res) => {
   try {
+    const { cinemaID, cinemaAddress, cinemaName, cinemaPhoneNumber, cinemaBusinessTime, cinemaPhoto } = req.body;
+    
+    // 輸入驗證
+    if (!cinemaID || !cinemaAddress || !cinemaName || !cinemaPhoneNumber || !cinemaBusinessTime) {
+      return res.status(400).json({ 
+        success: false,
+        error: '請填寫完整影城資訊' 
+      });
+    }
+    
+    // 影城 ID 長度驗證 (6 字元)
+    if (cinemaID.length !== 6) {
+      return res.status(400).json({ 
+        success: false,
+        error: '影城 ID 必須為 6 字元' 
+      });
+    }
+    
+    // 地址長度驗證 (最大 50 字元)
+    if (cinemaAddress.length > 50) {
+      return res.status(400).json({ 
+        success: false,
+        error: '影城地址長度不可超過 50 字元' 
+      });
+    }
+    
+    // 影城名稱長度驗證 (最大 50 字元)
+    if (cinemaName.length > 50) {
+      return res.status(400).json({ 
+        success: false,
+        error: '影城名稱長度不可超過 50 字元' 
+      });
+    }
+    
+    // 影城電話驗證 (台灣電話 10 位數字)
+    if (cinemaPhoneNumber.toString().length !== 10) {
+      return res.status(400).json({ 
+        success: false,
+        error: '影城電話必須為 10 位數字' 
+      });
+    }
+    
+    // 營業時間長度驗證 (最大 100 字元)
+    if (cinemaBusinessTime.length > 100) {
+      return res.status(400).json({ 
+        success: false,
+        error: '營業時間描述長度不可超過 100 字元' 
+      });
+    }
+    
+    // 影城圖片路徑驗證 (最大 50 字元)
+    if (cinemaPhoto && cinemaPhoto.length > 50) {
+      return res.status(400).json({ 
+        success: false,
+        error: '影城圖片路徑長度不可超過 50 字元' 
+      });
+    }
+    
     await db.insert('cinema', req.body);
-    res.status(201).json({ message: '新增影城成功' });
+    res.status(201).json({ 
+      success: true,
+      message: '新增影城成功' 
+    });
   } catch (error) {
-    res.status(500).json({ error: '新增影城失敗', details: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: '新增影城失敗', 
+      details: error.message 
+    });
   }
 });
 
@@ -441,17 +507,37 @@ app.get('/api/members', async (req, res) => {
   }
 });
 
-app.get('/api/members/:id', async (req, res) => {
+app.get('/api/members/:id', requireAuth, async (req, res) => {
   try {
+    // 只允許查看自己的資料 (除非是管理員)
+    if (req.memberID !== req.params.id) {
+      return res.status(403).json({ 
+        success: false,
+        error: '無權限查看此會員資料' 
+      });
+    }
+
     const member = await db.findAll('member', { memberID: req.params.id });
     if (member.length === 0) {
-      return res.status(404).json({ error: '找不到指定會員' });
+      return res.status(404).json({ 
+        success: false,
+        error: '找不到指定會員' 
+      });
     }
+    
     // 隱藏密碼欄位
     const { memberPwd, ...safeMember } = member[0];
-    res.json(safeMember);
+    res.json({
+      success: true,
+      member: safeMember,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
-    res.status(500).json({ error: '查詢會員失敗', details: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: '查詢會員失敗', 
+      details: error.message 
+    });
   }
 });
 
@@ -553,6 +639,65 @@ app.get('/api/ticketclasses', async (req, res) => {
   }
 });
 
+// 票種管理 API (符合資料格式規格)
+app.post('/api/ticketclasses', async (req, res) => {
+  try {
+    const { ticketClassID, ticketClassName, ticketClassPrice, ticketInfo } = req.body;
+    
+    // 輸入驗證
+    if (!ticketClassID || !ticketClassName || ticketClassPrice === undefined || !ticketInfo) {
+      return res.status(400).json({ 
+        success: false,
+        error: '請填寫完整票種資訊' 
+      });
+    }
+    
+    // 票種 ID 長度驗證 (6 字元)
+    if (ticketClassID.length !== 6) {
+      return res.status(400).json({ 
+        success: false,
+        error: '票種 ID 必須為 6 字元' 
+      });
+    }
+    
+    // 票種名稱長度驗證 (最大 50 字元)
+    if (ticketClassName.length > 50) {
+      return res.status(400).json({ 
+        success: false,
+        error: '票種名稱長度不可超過 50 字元' 
+      });
+    }
+    
+    // 票種價格驗證 (不可超過 100 萬)
+    if (ticketClassPrice < 0 || ticketClassPrice > 1000000) {
+      return res.status(400).json({ 
+        success: false,
+        error: '票種價格必須在 0-1000000 之間' 
+      });
+    }
+    
+    // 票種描述長度驗證 (最大 2000 字元)
+    if (ticketInfo.length > 2000) {
+      return res.status(400).json({ 
+        success: false,
+        error: '票種描述長度不可超過 2000 字元' 
+      });
+    }
+    
+    await db.insert('ticketclass', req.body);
+    res.status(201).json({ 
+      success: true,
+      message: '新增票種成功' 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: '新增票種失敗', 
+      details: error.message 
+    });
+  }
+});
+
 // Order Status
 app.get('/api/orderstatus', async (req, res) => {
   try {
@@ -588,6 +733,22 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
+    // 帳號長度驗證 (最大 50 字元)
+    if (account.length > 50) {
+      return res.status(400).json({ 
+        success: false,
+        error: '帳號長度不可超過 50 字元' 
+      });
+    }
+
+    // 密碼長度驗證 (最大 50 字元)
+    if (password.length > 50) {
+      return res.status(400).json({ 
+        success: false,
+        error: '密碼長度不可超過 50 字元' 
+      });
+    }
+
     // 查詢會員帳號
     const members = await db.findAll('member', { 
       memberAccount: account 
@@ -617,6 +778,7 @@ app.post('/api/auth/login', async (req, res) => {
       success: true,
       message: '登入成功',
       member: safeProfile,
+      sessionToken: `session_${member.memberID}_${Date.now()}`, // 簡易 session token
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -628,10 +790,11 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// 會員註冊
+// 會員註冊 (支援身分證字號作為主鍵)
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { 
+      memberID,        // 身分證字號 (主鍵)
       memberAccount, 
       memberPwd, 
       memberName, 
@@ -640,32 +803,103 @@ app.post('/api/auth/register', async (req, res) => {
     } = req.body;
     
     // 基本資料驗證
-    if (!memberAccount || !memberPwd || !memberName || !memberBirth || !memberPhone) {
+    if (!memberID || !memberAccount || !memberPwd || !memberName || !memberBirth || !memberPhone) {
       return res.status(400).json({ 
         success: false,
-        error: '請填寫完整註冊資訊' 
+        error: '請填寫完整註冊資訊（包含身分證字號）' 
+      });
+    }
+    
+    // 身分證字號格式驗證 (台灣身分證 10 字元)
+    const idRegex = /^[A-Z][12]\d{8}$/;
+    if (!idRegex.test(memberID) || memberID.length !== 10) {
+      return res.status(400).json({ 
+        success: false,
+        error: '身分證字號格式錯誤，請輸入正確的台灣身分證字號格式' 
       });
     }
 
+    // 詳細格式驗證
+    if (memberAccount.length < 3 || memberAccount.length > 20) {
+      return res.status(400).json({ 
+        success: false,
+        error: '帳號長度須為 3-20 字元' 
+      });
+    }
+
+    if (memberPwd.length < 6 || memberPwd.length > 50) {
+      return res.status(400).json({ 
+        success: false,
+        error: '密碼長度須為 6-50 字元' 
+      });
+    }
+
+    if (memberName.length < 2 || memberName.length > 10) {
+      return res.status(400).json({ 
+        success: false,
+        error: '姓名長度須為 2-10 字元' 
+      });
+    }
+
+    // 電話號碼格式驗證 (台灣手機格式)
+    const phoneRegex = /^09\d{8}$/;
+    // 電話號碼長度和格式驗證 (台灣電話 10 位數字)
+    if (memberPhone.toString().length !== 10 || !phoneRegex.test(memberPhone)) {
+      return res.status(400).json({ 
+        success: false,
+        error: '電話號碼格式錯誤，需為 10 位數字的台灣電話號碼 (09xxxxxxxx)' 
+      });
+    }
+
+    // 生日格式驗證 (YYYY-MM-DD)
+    const birthRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!birthRegex.test(memberBirth)) {
+      return res.status(400).json({ 
+        success: false,
+        error: '生日格式錯誤 (需為 YYYY-MM-DD)' 
+      });
+    }
+
+    // 檢查身分證字號是否已存在
+    const existingIDs = await db.findAll('member', { 
+      memberID: memberID 
+    });
+
+    if (existingIDs.length > 0) {
+      return res.status(409).json({ 
+        success: false,
+        error: '此身分證字號已被使用' 
+      });
+    }
+    
     // 檢查帳號是否已存在
-    const existingMembers = await db.findAll('member', { 
+    const existingAccounts = await db.findAll('member', { 
       memberAccount: memberAccount 
     });
 
-    if (existingMembers.length > 0) {
+    if (existingAccounts.length > 0) {
       return res.status(409).json({ 
         success: false,
         error: '此帳號已被使用' 
       });
     }
 
-    // 生成新的會員 ID
-    const allMembers = await db.findAll('member');
-    const nextId = String(allMembers.length + 1).padStart(10, 'U00000000');
+    // 檢查電話是否已被使用
+    const existingPhones = await db.findAll('member', { 
+      memberPhone: memberPhone 
+    });
 
+    if (existingPhones.length > 0) {
+      return res.status(409).json({ 
+        success: false,
+        error: '此電話號碼已被使用' 
+      });
+    }
+
+    // 使用提供的身分證字號作為主鍵
     // 建立新會員資料
     const newMember = {
-      memberID: nextId,
+      memberID: memberID,
       memberAccount,
       memberPwd, // 實際應用建議使用 bcrypt 加密
       memberName,
@@ -694,18 +928,80 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// 會員登出 (簡單版本，實際應用可能需要 JWT token 處理)
-app.post('/api/auth/logout', async (req, res) => {
+// 簡易 session 驗證中間件
+function requireAuth(req, res, next) {
+  const sessionToken = req.headers.authorization || req.body.sessionToken;
+  
+  if (!sessionToken) {
+    return res.status(401).json({ 
+      success: false,
+      error: '需要登入才能使用此功能' 
+    });
+  }
+
+  // 簡易 token 格式驗證 (session_memberID_timestamp)
+  if (!sessionToken.startsWith('session_')) {
+    return res.status(401).json({ 
+      success: false,
+      error: '無效的登入狀態' 
+    });
+  }
+
+  // 提取 memberID (實際應用應使用 JWT 等安全機制)
+  const tokenParts = sessionToken.split('_');
+  if (tokenParts.length !== 3) {
+    return res.status(401).json({ 
+      success: false,
+      error: '登入狀態已過期' 
+    });
+  }
+
+  req.memberID = tokenParts[1];
+  next();
+}
+
+// 會員登出 (需要登入狀態)
+app.post('/api/auth/logout', requireAuth, async (req, res) => {
   try {
+    // 這裡可以將 token 加入黑名單 (簡易版本就直接成功)
     res.json({ 
       success: true,
       message: '登出成功',
+      memberID: req.memberID,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
     res.status(500).json({ 
       success: false,
       error: '登出失敗', 
+      details: error.message 
+    });
+  }
+});
+
+// 獲取會員個人資料 (需要登入)
+app.get('/api/auth/profile', requireAuth, async (req, res) => {
+  try {
+    const members = await db.findAll('member', { memberID: req.memberID });
+    
+    if (members.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        error: '會員不存在' 
+      });
+    }
+
+    const { memberPwd, ...safeProfile } = members[0];
+    
+    res.json({ 
+      success: true,
+      member: safeProfile,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: '獲取資料失敗', 
       details: error.message 
     });
   }
@@ -775,7 +1071,74 @@ app.get('/api/rated', async (req, res) => {
     const rated = await db.findAll('rated');
     res.json(rated);
   } catch (error) {
-    res.status(500).json({ error: '查詢分級失敗', details: error.message });
+    res.status(500).json({ error: '查詢電影分級失敗', details: error.message });
+  }
+});
+
+// 餐點管理 API (符合資料格式規格)
+app.post('/api/meals', async (req, res) => {
+  try {
+    const { mealsID, mealName, mealsPrice, mealsDisp, mealsPhoto } = req.body;
+    
+    // 輸入驗證
+    if (!mealsID || !mealName || mealsPrice === undefined || !mealsDisp) {
+      return res.status(400).json({ 
+        success: false,
+        error: '請填寫完整餐點資訊' 
+      });
+    }
+    
+    // 餐點 ID 長度驗證 (6 字元)
+    if (mealsID.length !== 6) {
+      return res.status(400).json({ 
+        success: false,
+        error: '餐點 ID 必須為 6 字元' 
+      });
+    }
+    
+    // 餐點名稱長度驗證 (最大 10 字元)
+    if (mealName.length > 10) {
+      return res.status(400).json({ 
+        success: false,
+        error: '餐點名稱長度不可超過 10 字元' 
+      });
+    }
+    
+    // 金額驗證 (不可超過 100 萬)
+    if (mealsPrice < 0 || mealsPrice > 1000000) {
+      return res.status(400).json({ 
+        success: false,
+        error: '餐點金額必須在 0-1000000 之間' 
+      });
+    }
+    
+    // 餐點描述長度驗證 (最大 2000 字元)
+    if (mealsDisp.length > 2000) {
+      return res.status(400).json({ 
+        success: false,
+        error: '餐點描述長度不可超過 2000 字元' 
+      });
+    }
+    
+    // 餐點圖片路徑驗證 (最大 100 字元)
+    if (mealsPhoto && mealsPhoto.length > 100) {
+      return res.status(400).json({ 
+        success: false,
+        error: '餐點圖片路徑長度不可超過 100 字元' 
+      });
+    }
+    
+    await db.insert('meals', req.body);
+    res.status(201).json({ 
+      success: true,
+      message: '新增餐點成功' 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: '新增餐點失敗', 
+      details: error.message 
+    });
   }
 });
 

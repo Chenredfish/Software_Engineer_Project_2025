@@ -165,6 +165,7 @@ async function quickTest() {
   console.log('8a. 測試會員註冊:');
   try {
     const registerData = {
+      memberID: 'A123456789',      // 台灣身分證字號格式
       memberAccount: 'test_user_' + Date.now(), // 使用時間戳避免重複
       memberPwd: 'password123',
       memberName: '測試用戶',
@@ -187,12 +188,28 @@ async function quickTest() {
       if (loginResult.success) {
         console.log(`  ✅ 登入成功: ${loginResult.member.memberName}`);
         console.log(`  會員資料: ID=${loginResult.member.memberID}, 電話=${loginResult.member.memberPhone}`);
+        console.log(`  Session Token: ${loginResult.sessionToken}`);
         
-        // 8c. 測試會員登出
-        console.log('8c. 測試會員登出:');
-        const logoutResult = await postAPI('/api/auth/logout', {});
+        // 8c. 測試獲取個人資料 (需要 token)
+        console.log('8c. 測試獲取個人資料 (需登入):');
+        const profileResult = await postAPI('/api/auth/profile', {
+          sessionToken: loginResult.sessionToken
+        });
+        if (profileResult.success) {
+          console.log(`  ✅ 個人資料獲取成功: ${profileResult.member.memberName}`);
+        } else {
+          console.log(`  ❌ 個人資料獲取失敗: ${profileResult.error}`);
+        }
+        
+        // 8d. 測試會員登出 (需要 token)
+        console.log('8d. 測試會員登出:');
+        const logoutResult = await postAPI('/api/auth/logout', {
+          sessionToken: loginResult.sessionToken
+        });
         if (logoutResult.success) {
-          console.log(`  ✅ 登出成功`);
+          console.log(`  ✅ 登出成功 (會員ID: ${logoutResult.memberID})`);
+        } else {
+          console.log(`  ❌ 登出失敗: ${logoutResult.error}`);
         }
       } else {
         console.log(`  ❌ 登入失敗: ${loginResult.error}`);
@@ -201,7 +218,58 @@ async function quickTest() {
       console.log(`  ❌ 註冊失敗: ${registerResult.error}`);
     }
   } catch (error) {
-    console.log(`  ❌ 認證測試失敗: ${error.message}`);
+    console.log(`  ❌ 錯誤情況測試失敗: ${error.message}`);
+  }
+  console.log();
+  
+  // 10. 測試其他資料表 API (餐點、票種等)
+  console.log('=== 10. 資料表管理 API 測試 ===');
+  try {
+    console.log('10a. 測試新增餐點:');
+    const mealResult = await postAPI('/api/meals', {
+      mealsID: 'M99999',
+      mealName: '測試餐點',
+      mealsPrice: 150,
+      mealsDisp: '這是一個測試用餐點',
+      mealsPhoto: 'Photo/test/meal.jpg'
+    });
+    
+    if (mealResult.success) {
+      console.log(`  ✅ 餐點新增成功: ${mealResult.message}`);
+    } else {
+      console.log(`  ❌ 餐點新增失敗: ${mealResult.error}`);
+    }
+    
+    console.log('10b. 測試新增票種:');
+    const ticketResult = await postAPI('/api/ticketclasses', {
+      ticketClassID: 'T99999',
+      ticketClassName: '測試票種',
+      ticketClassPrice: 280,
+      ticketInfo: '這是一個測試用票種'
+    });
+    
+    if (ticketResult.success) {
+      console.log(`  ✅ 票種新增成功: ${ticketResult.message}`);
+    } else {
+      console.log(`  ❌ 票種新增失敗: ${ticketResult.error}`);
+    }
+    
+    console.log('10c. 測試超長 ID 驗證 (應該失敗):');
+    const invalidMealResult = await postAPI('/api/meals', {
+      mealsID: 'M999999',  // 超過 6 字元
+      mealName: '錯誤餐點',
+      mealsPrice: 100,
+      mealsDisp: '測試'
+    });
+    
+    if (!invalidMealResult.success) {
+      console.log(`  ✅ 正確阻擋無效 ID: ${invalidMealResult.error}`);
+    } else {
+      console.log(`  ❌ 未正確驗證 ID 長度`);
+    }
+    
+  } catch (error) {
+    console.log(`  ❌ 資料表 API 測試失敗: ${error.message}`);
   }
   console.log();
   
@@ -210,6 +278,7 @@ async function quickTest() {
   try {
     console.log('9a. 測試重複帳號註冊 (應該失敗):');
     const duplicateResult = await postAPI('/api/auth/register', {
+      memberID: 'A123456789',     // 已存在的身分證字號
       memberAccount: 'user_john', // 已存在的帳號
       memberPwd: 'newpassword',
       memberName: '重複用戶',
@@ -242,6 +311,76 @@ async function quickTest() {
     
     if (checkResult.success) {
       console.log(`  ✅ 帳號檢查: 存在=${checkResult.exists}, 可用=${checkResult.available}`);
+    }
+    
+    console.log('9d. 測試未登入狀態存取受保護資源 (應該失敗):');
+    const unauthorizedResult = await postAPI('/api/auth/profile', {});
+    
+    if (!unauthorizedResult.success) {
+      console.log(`  ✅ 正確阻擋未登入存取: ${unauthorizedResult.error}`);
+    } else {
+      console.log(`  ❌ 未正確保護受限資源`);
+    }
+    
+    console.log('9e. 測試無效 token 登出 (應該失敗):');
+    const invalidTokenResult = await postAPI('/api/auth/logout', {
+      sessionToken: 'invalid_token_123'
+    });
+    
+    if (!invalidTokenResult.success) {
+      console.log(`  ✅ 正確驗證無效 token: ${invalidTokenResult.error}`);
+    } else {
+      console.log(`  ❌ 未正確驗證 token`);
+    }
+    
+    console.log('9f. 測試資料格式驗證 (應該失敗):');
+    
+    // 測試無效身分證字號
+    const invalidIdResult = await postAPI('/api/auth/register', {
+      memberID: '123456789',      // 無效身分證格式
+      memberAccount: 'test_invalid',
+      memberPwd: 'password123',
+      memberName: '測試',
+      memberBirth: '1990-01-01',
+      memberPhone: '0912345678'
+    });
+    
+    if (!invalidIdResult.success) {
+      console.log(`  ✅ 正確阻擋無效身分證: ${invalidIdResult.error}`);
+    } else {
+      console.log(`  ❌ 未正確驗證身分證格式`);
+    }
+    
+    // 測試無效電話號碼
+    const invalidPhoneResult = await postAPI('/api/auth/register', {
+      memberID: 'B223456789',
+      memberAccount: 'test_invalid_phone',
+      memberPwd: 'password123',
+      memberName: '測試',
+      memberBirth: '1990-01-01',
+      memberPhone: '123456789'    // 無效電話格式
+    });
+    
+    if (!invalidPhoneResult.success) {
+      console.log(`  ✅ 正確阻擋無效電話: ${invalidPhoneResult.error}`);
+    } else {
+      console.log(`  ❌ 未正確驗證電話格式`);
+    }
+    
+    // 測試超長帳號
+    const longAccountResult = await postAPI('/api/auth/register', {
+      memberID: 'C234567890',
+      memberAccount: 'a'.repeat(51),  // 超過 50 字元的帳號
+      memberPwd: 'password123',
+      memberName: '測試',
+      memberBirth: '1990-01-01',
+      memberPhone: '0912345678'
+    });
+    
+    if (!longAccountResult.success) {
+      console.log(`  ✅ 正確阻擋超長帳號: ${longAccountResult.error}`);
+    } else {
+      console.log(`  ❌ 未正確驗證帳號長度`);
     }
     
   } catch (error) {
