@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const db = require('./database');
-const bulkRoutes = require('./routes/bulkRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -229,7 +228,7 @@ app.post('/api/init-sample-data', async (req, res) => {
 });
 
 // ==================== CORE TABLES API ====================
-app.use('/api', bulkRoutes); // 這樣就可以使用 /api/bulk/... 的路由了
+
 // Cinema routes
 app.get('/api/cinemas', async (req, res) => {
   try {
