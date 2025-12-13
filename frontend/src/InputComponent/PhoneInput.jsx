@@ -1,12 +1,13 @@
 import TextField from "@mui/material/TextField";
+import React from 'react';
 
-export default function BirthdayInput({ value, onChange }) {
+export default function PhoneInput({ value, onChange }) {
   return (
     <TextField
-      id="birthday-input"
-      label="生日"
+      id="phone-input"
+      label="電話號碼"
       variant="outlined"
-      placeholder="請輸入生日（例如：2003/05/21）"
+      placeholder="請輸入電話號碼"
       fullWidth
       margin="normal"
       value={value}

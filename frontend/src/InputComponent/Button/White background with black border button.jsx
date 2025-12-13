@@ -1,4 +1,5 @@
 import Button from "@mui/material/Button";
+import React from 'react';
 
 export default function RegisterButton({ text = "登入", onClick }) {
   return (

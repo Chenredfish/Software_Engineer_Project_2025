@@ -1,13 +1,13 @@
 import TextField from "@mui/material/TextField";
+import React from 'react';
 
-export default function EmailInput({ value, onChange }) {
+export default function AccountInput({ value, onChange }) {
   return (
     <TextField
-      id="email-input"
-      label="電子信箱"
-      type="email"
+      id="account-input"
+      label="帳號"
       variant="outlined"
-      placeholder="請輸入電子信箱"
+      placeholder="請輸入帳號"
       fullWidth
       margin="normal"
       value={value}

@@ -1,12 +1,14 @@
 import TextField from "@mui/material/TextField";
+import React from 'react';
 
-export default function IdNumberInput({ value, onChange }) {
+export default function PasswordInput({ value, onChange }) {
   return (
     <TextField
-      id="id-number-input"
-      label="身分證字號"
+      id="password-input"
+      label="密碼"
+      type="password"
       variant="outlined"
-      placeholder="請輸入身分證字號"
+      placeholder="請輸入密碼"
       fullWidth
       margin="normal"
       value={value}

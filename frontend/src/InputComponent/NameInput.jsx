@@ -1,12 +1,14 @@
+// NameInput.jsx
 import TextField from "@mui/material/TextField";
+import React from 'react';
 
-export default function PhoneInput({ value, onChange }) {
+export default function NameInput({ value, onChange }) {
   return (
     <TextField
-      id="phone-input"
-      label="電話號碼"
+      id="name-input"
+      label="姓名"
       variant="outlined"
-      placeholder="請輸入電話號碼"
+      placeholder="請輸入姓名"
       fullWidth
       margin="normal"
       value={value}

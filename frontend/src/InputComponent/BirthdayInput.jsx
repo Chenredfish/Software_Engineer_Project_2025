@@ -1,13 +1,13 @@
 import TextField from "@mui/material/TextField";
+import React from 'react';
 
-export default function PasswordInput({ value, onChange }) {
+export default function BirthdayInput({ value, onChange }) {
   return (
     <TextField
-      id="password-input"
-      label="密碼"
-      type="password"
+      id="birthday-input"
+      label="生日"
       variant="outlined"
-      placeholder="請輸入密碼"
+      placeholder="請輸入生日（例如：2003-05-21）"
       fullWidth
       margin="normal"
       value={value}

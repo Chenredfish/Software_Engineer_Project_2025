@@ -1,5 +1,6 @@
 // ForgotPasswordButton.jsx
 import Button from "@mui/material/Button";
+import React from 'react';
 
 export default function ForgotPasswordButton({ text = "登入",onClick }) {
   return (
