@@ -166,6 +166,25 @@ async function quickTest() {
   }
   console.log();
 
+  // 7a. 顯示現有會員帳號
+  console.log('=== 7a. 現有會員帳號列表 ===');
+  try {
+    const members = await callAPI('/api/members');
+    if (members && members.length > 0) {
+      console.log('目前註冊的會員帳號:');
+      members.forEach((member, index) => {
+        console.log(`  ${index + 1}. ${member.memberAccount} (${member.memberName})`);
+        console.log(`     身分證: ${member.memberID}, 電話: ${member.memberPhone}`);
+        console.log(`     餘額: $${member.memberBalance || 0}, 註冊日期: ${member.memberDate || '未知'}`);
+      });
+    } else {
+      console.log('目前沒有註冊會員');
+    }
+  } catch (error) {
+    console.log(`失敗: ${error.message}`);
+  }
+  console.log();
+
   // 8. 會員認證 API 測試
   console.log('=== 8. 會員認證系統測試 ===');
   
