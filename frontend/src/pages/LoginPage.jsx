@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Link as RouterLink } from "react-router-dom";
+
 
 // 你已有的 PrintElement（路徑依你專案結構）
 import { PrintLoginResult } from "../PrintElement/components/LoginPrints";
@@ -58,7 +60,7 @@ export default function LoginPage() {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
-      {/* 上方導覽列（先做出示意圖的樣子） */}
+      {/* 上方導覽列 */}
       <Box
         sx={{
           display: "flex",
@@ -68,13 +70,32 @@ export default function LoginPage() {
           borderBottom: "2px solid #000"
         }}
       >
-        {["影城介紹", "活動介紹", "電影介紹", "餐飲介紹", "訂票系統", "快搜系統", "登入 / 註冊會員"].map(
-          (t) => (
-            <Typography key={t} sx={{ fontSize: 14 }}>
-              {t}
-            </Typography>
-          )
-        )}
+        {[
+          { label: "影城介紹", path: "/cinema" },
+          { label: "活動介紹", path: "/event" },
+          { label: "電影介紹", path: "/movie" },
+          { label: "餐飲介紹", path: "/food" },
+          { label: "訂票系統", path: "/book" }, // ⭐ 重點
+          { label: "快搜系統", path: "/search" },
+          { label: "登入 / 註冊會員", path: "/login" }
+        ].map((item) => (
+          <Typography
+            key={item.label}
+            component={RouterLink}
+            to={item.path}
+            sx={{
+              fontSize: 14,
+              color: "#000",
+              textDecoration: "none",
+              cursor: "pointer",
+              "&:hover": {
+                textDecoration: "underline"
+              }
+            }}
+          >
+            {item.label}
+          </Typography>
+        ))}
       </Box>
 
       {/* 中間置中框框 */}
