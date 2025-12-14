@@ -151,6 +151,13 @@ class Database {
                 FOREIGN KEY (cinemaID) REFERENCES cinema(cinemaID),
                 FOREIGN KEY (movieID) REFERENCES movie(movieID)
             )`,
+            // 🔑 新增：獨立的密碼重設權杖表
+            `CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                token TEXT PRIMARY KEY,
+                memberAccount TEXT NOT NULL,      -- 確保這行存在
+                expires INTEGER NOT NULL,
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`,
 
             // 訂票紀錄表
             `CREATE TABLE IF NOT EXISTS bookingrecord (

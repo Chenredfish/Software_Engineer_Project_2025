@@ -1,6 +1,8 @@
 // routes/auth.js - 會員認證相關API
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+const { sendEmail } = require('../emailConfig');
 
 // 簡易 session 驗證中間件
 function requireAuth(req, res, next) {
@@ -324,6 +326,119 @@ router.post('/check-account', async (req, res) => {
       details: error.message 
     });
   }
+});
+
+// ----------------------------------------------------
+// API 1: 請求重設密碼 (POST /api/auth/forgot-password)
+// ----------------------------------------------------
+// ----------------------------------------------------
+// API 1: 請求重設密碼 (POST /api/auth/forgot-password)
+// ----------------------------------------------------
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { account } = req.body; 
+        if (!account) {
+             return res.status(400).json({ success: false, error: '請提供會員帳號/郵箱' });
+        }
+
+        const db = req.app.locals.db;
+        const members = await db.findAll('member', { memberAccount: account });
+
+        if (members.length === 0) {
+          // 1. 安全回應
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return res.json({ success: true, message: '若帳號存在，重設密碼連結已發送到您的郵箱' });
+        }
+
+        const member = members[0];
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpires = Date.now() + (60 * 60 * 1000); // 1 小時後過期
+
+        // 1. 儲存 Token 到獨立資料表
+        await db.insert('password_reset_tokens', {
+            token: resetToken,
+            memberAccount: member.memberAccount,
+            expires: tokenExpires
+        });
+
+        // 2. 構建郵件內容
+        // 🚨 替換 YOUR_FRONTEND_URL (假設是 http://localhost:8080)
+        const resetLink = `http://localhost:8080/reset-password?token=${resetToken}`; 
+        
+        const emailContent = `
+            <h2>密碼重設請求</h2>
+            <p>請點擊以下連結重設您的密碼。此連結將於 1 小時後失效：</p>
+            <p><a href="${resetLink}">重設密碼連結</a></p>
+        `;
+
+        // 3. 發送郵件
+        const mailSent = await sendEmail(
+            member.memberAccount, 
+            '電影訂票系統 - 密碼重設通知',
+            emailContent
+        );
+
+        res.json({ 
+            success: true, 
+            message: mailSent 
+                ? '重設密碼連結已發送到您的郵箱，請檢查收件箱。' 
+                : 'Token 已生成，但郵件發送失敗，請聯繫客服。' ,
+            resetToken: resetToken
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, error: '請求重設密碼失敗', details: error.message });
+    }
+});
+
+
+// ----------------------------------------------------
+// API 2: 執行重設密碼 (PUT /api/auth/password-reset)
+// ----------------------------------------------------
+// ----------------------------------------------------
+// API 2: 執行重設密碼 (PUT /api/auth/password-reset)
+// ----------------------------------------------------
+router.put('/password-reset', async (req, res) => {
+    try {
+        const { resetToken, newPassword } = req.body;
+        
+        if (!resetToken || !newPassword) {
+             return res.status(400).json({ success: false, error: '請提供權杖和新密碼' });
+        }
+
+        const db = req.app.locals.db;
+        
+        // 1. 從獨立資料表查詢權杖
+        const tokens = await db.findAll('password_reset_tokens', { token: resetToken });
+        
+        if (tokens.length === 0) {
+            return res.status(400).json({ success: false, error: '無效或已使用的重設密碼權杖' });
+        }
+
+        const tokenRecord = tokens[0];
+        
+        // 2. 檢查權杖是否過期
+        if (tokenRecord.expires < Date.now()) {
+            await db.delete('password_reset_tokens', { token: resetToken });
+            return res.status(400).json({ success: false, error: '重設密碼權杖已過期，請重新發起請求' });
+        }
+        
+        // 3. 執行密碼更新 (查詢會員ID)
+        const memberAccountToUpdate = tokenRecord.memberAccount;
+        
+        // 🚨 注意：這裡假設 memberAccount 是唯一的，直接用它來更新密碼
+        await db.update('member', 
+            { memberPwd: newPassword }, 
+            { memberAccount: memberAccountToUpdate }
+        );
+        
+        // 4. 清除已使用的權杖 (重要：防止二次使用)
+        await db.delete('password_reset_tokens', { token: resetToken });
+
+        res.json({ success: true, message: '密碼重設成功，請使用新密碼登入' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: '重設密碼失敗', details: error.message });
+    }
 });
 
 // 導出路由器和中間件
