@@ -7,6 +7,7 @@
 ```bash
 # 1. 安裝依賴
 npm install
+npm install nodemailer
 
 # 2. 啟動伺服器
 npm start
