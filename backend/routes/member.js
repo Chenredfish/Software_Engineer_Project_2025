@@ -19,6 +19,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+// 查詢所有會員 (測試用，包含密碼) - 僅供開發測試使用
+router.get('/debug/with-passwords', async (req, res) => {
+  try {
+    const db = req.app.locals.db;
+    const members = await db.findAll('member');
+    // 測試環境：返回完整資料包含密碼
+    res.json(members);
+  } catch (error) {
+    res.status(500).json({ error: '查詢會員失敗', details: error.message });
+  }
+});
+
 // 查詢單一會員 (需要登入，只能查看自己的資料)
 router.get('/:id', requireAuth, async (req, res) => {
   try {
