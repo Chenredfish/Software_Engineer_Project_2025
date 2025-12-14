@@ -3,6 +3,47 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('./auth');
 
+router.get('/search', async (req, res) => {
+    try {
+        const db = req.app.locals.db;
+        
+        // req.query 包含 URL 中的所有查詢參數 (例如: ?memberID=M001&orderStateID=S01)
+        const searchCriteria = req.query; 
+
+        // 1. 檢查是否有提供任何查詢條件
+        if (Object.keys(searchCriteria).length === 0) {
+            // 如果沒有提供條件，可以選擇返回所有紀錄，或者提示使用者
+            return res.status(400).json({ 
+                success: false, 
+                error: '請提供至少一個搜尋條件。',
+                availableFields: [
+                    'orderID', 'memberID', 'showingID', 
+                    'ticketID', 'orderStateID', 'mealsID', 
+                    'ticketTypeID', 'bookingTime', 'seatID'
+                ]
+            });
+        }
+        
+        // 2. 執行資料庫查詢
+        // 由於 db.findAll 支援傳入物件作為 WHERE 條件，這裡可以直接傳遞 searchCriteria
+        const bookings = await db.findAll('bookingrecord', searchCriteria);
+
+        // 3. 返回結果
+        res.json({
+            success: true,
+            criteria: searchCriteria,
+            count: bookings.length,
+            bookings: bookings
+        });
+
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            error: '多條件搜尋訂票紀錄失敗', 
+            details: error.message 
+        });
+    }
+});
 // 查詢所有訂票紀錄
 router.get('/', async (req, res) => {
   try {

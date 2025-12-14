@@ -183,6 +183,30 @@ class Database {
             await this.run(sql);
         }
     }
+    // ===================================================
+    // 交易方法 (Transaction Methods) - 必須實作
+    // ===================================================
+
+    // 1. 開始交易
+    async beginTransaction() {
+        return this.db.run('BEGIN TRANSACTION;');
+    }
+
+    // 2. 提交交易
+    async commit() {
+        return this.db.run('COMMIT;');
+    }
+
+    // 3. 回滾交易 (修復您的錯誤)
+    async rollback() {
+        // 確保在發生錯誤時，不會因為嘗試回滾不存在的交易而崩潰
+        try {
+            return this.db.run('ROLLBACK;');
+        } catch (error) {
+            // 如果沒有活躍的交易可回滾，通常會拋出錯誤，這裡可以選擇忽略或記錄
+            console.warn("Rollback failed, possibly no active transaction:", error.message);
+        }
+    }
 
     // Promise 化的資料庫操作
     run(sql, params = []) {

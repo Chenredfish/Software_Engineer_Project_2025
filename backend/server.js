@@ -203,6 +203,14 @@ app.post('/api/init-sample-data', async (req, res) => {
                     cinemaPhoto: 'Photo/cinema/zhongli_starlight.jpg'
                 }
             ],
+            theater: [
+                // 為了匹配 showing，這裡使用 T00001 到 T00005
+                { theaterID: 'T00001', theaterName: '一廳 IMAX', cinemaID: 'C00001' },
+                { theaterID: 'T00002', theaterName: '二廳 2D', cinemaID: 'C00001' },
+                { theaterID: 'T00003', theaterName: '三廳 Dolby', cinemaID: 'C00002' },
+                { theaterID: 'T00004', theaterName: '四廳 4DX', cinemaID: 'C00002' },
+                { theaterID: 'T00005', theaterName: '五廳 標準廳', cinemaID: 'C00003' }
+            ],
             
             // 電影資料 (showing 依賴 movie)
             movie: [
@@ -269,7 +277,23 @@ app.post('/api/init-sample-data', async (req, res) => {
                 { memberID: 'D456789012', memberAccount: 'user_lisa', memberPwd: 'hashed_pwd4', memberName: '黃麗莎', memberBirth: '1995-03-25', memberPhone: '0940456789', memberBalance: 3500 },
                 { memberID: 'E567890123', memberAccount: 'user_mike', memberPwd: 'hashed_pwd5', memberName: '吳麥克', memberBirth: '1976-01-10', memberPhone: '0950567890', memberBalance: 10000 }
             ],
+            // 新增：theater (影廳) 資料
+            // 確保 theaterID 與 showing 中引用的 T00001~T00005 匹配，
+            // 且 theaterID 應指向其父表 cinemaID
+            theater: [
+                { theaterID: 'T00001', theaterName: '一廳 IMAX', cinemaID: 'C00001' },
+                { theaterID: 'T00002', theaterName: '二廳 2D', cinemaID: 'C00001' },
+                { theaterID: 'T00003', theaterName: '三廳 Dolby', cinemaID: 'C00002' },
+                { theaterID: 'T00004', theaterName: '四廳 4DX', cinemaID: 'C00002' },
+                { theaterID: 'T00005', theaterName: '五廳 標準廳', cinemaID: 'C00003' }
+            ],
+
             
+
+            // 新增：ticket (票券) 資料
+            // 確保 ticketID 與 bookingrecord 中引用的 O00001~O00005 匹配
+            // 💡 注意: 這裡的 O00001-O00005 看起來像是訂單號，但您將它放在 ticketID 欄位。
+            // 我假設這是一個專門記錄已發出票券的 ID，且與 orderID 暫時相同。
             // 關聯表
             showing: [
                 { showingID: 'H00001', movieID: 'D00001', theaterID: 'T00001', versionID: 'V00002', showingTime: '2024-12-15 14:30:00' },
@@ -277,6 +301,15 @@ app.post('/api/init-sample-data', async (req, res) => {
                 { showingID: 'H00003', movieID: 'D00003', theaterID: 'T00003', versionID: 'V00004', showingTime: '2024-12-15 19:20:00' },
                 { showingID: 'H00004', movieID: 'D00004', theaterID: 'T00004', versionID: 'V00001', showingTime: '2024-12-15 21:30:00' },
                 { showingID: 'H00005', movieID: 'D00005', theaterID: 'T00005', versionID: 'V00003', showingTime: '2024-12-15 22:15:00' }
+            ],
+            // 新增：seat (座位) 資料
+            // 確保 seatID 與 bookingrecord 中引用的 S00001~S00005 匹配
+            seat: [
+                { showingID: 'H00001', seatNumber: 'A01', seatState: 1 }, // H00001 場次 A01 已預訂
+                { showingID: 'H00001', seatNumber: 'A02', seatState: 0 },
+                { showingID: 'H00002', seatNumber: 'B01', seatState: 1 }, // H00002 場次 B01 已預訂
+                { showingID: 'H00003', seatNumber: 'C01', seatState: 0 },
+                { showingID: 'H00004', seatNumber: 'D01', seatState: 0 }
             ],
             bookingrecord: [
                 { orderID: 'O00001', memberID: 'A123456789', showingID: 'H00001', ticketID: 'O00001', orderStateID: 'S00001', mealsID: 'M00001', ticketTypeID: 'T00001', bookingTime: '2024-12-10', seatID: 'S00001' },
@@ -289,8 +322,13 @@ app.post('/api/init-sample-data', async (req, res) => {
 
         // 依序插入資料 (注意外鍵依賴關係)
         const insertOrder = [
-            'rated', 'version', 'supervisor', 'orderstatus', 'ticketclass', 'meals',
-            'cinema', 'movie', 'member', 'showing', 'bookingrecord'
+            'rated', 'version', 'supervisor', 'orderstatus', 'ticketclass', 'meals', 'cinema', 'movie', 'member', 
+            // 級別 2
+            'theater', 'seat', 
+            // 級別 3
+            'showing', 
+            // 級別 4
+            'ticket', 'bookingrecord' 
         ];
 
         for (const tableName of insertOrder) {
