@@ -1,4 +1,5 @@
 // server.js - 主要伺服器檔案 (重構後)
+const path = require('path');//為了讓照片能動加的，沒動其他東西，軒
 const express = require('express');
 const cors = require('cors');
 const db = require('./database');
@@ -9,6 +10,11 @@ const PORT = process.env.PORT || 3000;
 // 中間件設定
 app.use(cors());
 app.use(express.json());
+
+app.use(
+  '/Photo',
+  express.static(path.resolve(__dirname, './DataBase/Photo'))
+);//為了讓照片能動加的，沒動其他東西，軒
 
 // 將資料庫實例附加到 app.locals，讓所有路由都能使用
 app.locals.db = db;

@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";//換�
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";//登入子系統的路由
 import RelatedBrowsePage from "./pages/RelatedBrowsePage";
+import CinemasPage from "./pages/CinemasPage";
+import CinemaDetailPage from "./pages/CinemaDetailPage";
 
 function App() {
   return (
@@ -12,11 +14,13 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/browse" element={<RelatedBrowsePage />} />
+        <Route path="/cinemas" element={<CinemasPage />} />
+        <Route path="/cinemas/:id" element={<CinemaDetailPage />} />
+
 
         {/* 以下都先未接入 */}
         <Route path="/member" element={<Placeholder title="會員資料" />} />
         <Route path="/movies" element={<Placeholder title="電影介紹" />} />
-        <Route path="/cinemas" element={<Placeholder title="影城介紹" />} />
         <Route path="/activities" element={<Placeholder title="活動介紹" />} />
         <Route path="/meals" element={<Placeholder title="餐飲介紹" />} />
         <Route path="/booking" element={<Placeholder title="訂票系統" />} />
