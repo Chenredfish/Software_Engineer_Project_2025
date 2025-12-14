@@ -47,7 +47,7 @@ export default function LoginPage() {
         setLoginOk(true);
         localStorage.setItem("sessionToken", res.data.sessionToken);
         localStorage.setItem("memberID", res.data.member.memberID);
-        navigate("/movies");
+        navigate("/browse");
       } else {
         setLoginOk(false);
       }
