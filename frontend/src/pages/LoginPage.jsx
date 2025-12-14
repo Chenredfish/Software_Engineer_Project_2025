@@ -38,7 +38,7 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setHasTried(true);
     try {
-      const res = await axios.post("http://localhost:3000/auth/login", {
+      const res = await axios.post("http://localhost:3000/api/auth/login", {
         account,
         password
       });
@@ -47,8 +47,7 @@ export default function LoginPage() {
         setLoginOk(true);
         localStorage.setItem("sessionToken", res.data.sessionToken);
         localStorage.setItem("memberID", res.data.member.memberID);
-        // 這裡登入成功後你要導去哪裡可以再決定
-        // navigate("/");
+        navigate("/movies");
       } else {
         setLoginOk(false);
       }
