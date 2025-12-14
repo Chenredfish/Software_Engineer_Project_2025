@@ -8,7 +8,7 @@ export default function CinemaDetailPage() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:3000/cinema/${id}`)
+      .get(`http://localhost:3000/api/cinemas/${id}`)
       .then(res => setCinema(res.data))
       .catch(() => alert("影城詳細資料尚未接入"));
   }, [id]);
