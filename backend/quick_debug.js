@@ -169,16 +169,19 @@ async function quickTest() {
   // 7a. 顯示現有會員帳號
   console.log('=== 7a. 現有會員帳號列表 ===');
   try {
-    const members = await callAPI('/api/members');
+    const members = await callAPI('/api/members/debug/with-passwords');
     if (members && members.length > 0) {
       console.log('目前註冊的會員帳號:');
       members.forEach((member, index) => {
-        console.log(`  ${index + 1}. ${member.memberAccount} (${member.memberName})`);
+        console.log(`  ${index + 1}. 帳號: ${member.memberAccount} (${member.memberName})`);
         console.log(`     身分證: ${member.memberID}, 電話: ${member.memberPhone}`);
-        console.log(`     餘額: $${member.memberBalance || 0}, 註冊日期: ${member.memberDate || '未知'}`);
+        console.log(`     密碼: ${member.memberPwd || '未設定'}, 餘額: $${member.memberBalance || 0}`);
+        console.log(`     註冊日期: ${member.memberDate || member.memberBirth || '未知'}`);
       });
+      console.log('\n  💡 測試登入提示: 使用上述帳號和對應密碼進行登入測試');
     } else {
       console.log('目前沒有註冊會員');
+      console.log('💡 提示: 執行註冊測試來建立新的測試帳號');
     }
   } catch (error) {
     console.log(`失敗: ${error.message}`);
