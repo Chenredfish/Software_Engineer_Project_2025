@@ -370,6 +370,19 @@ async function testMemberAPIs() {
     passedTests++;
   }
 
+  // 測試會員密碼修改
+  totalTests++;
+  const passwordUpdateData = {
+    memberPwd: 'newpassword123'
+  };
+  const passwordUpdateResult = await callAPI(`/api/members/${testMember.id}`, 'PUT', passwordUpdateData, {
+    'Authorization': testAuth.memberToken
+  });
+  if (logResult('會員密碼修改', passwordUpdateResult)) {
+    passedTests++;
+    console.log('     密碼修改成功');
+  }
+
   // 測試會員加值
   totalTests++;
   const topupResult = await callAPI(`/api/members/${testMember.id}/topup`, 'POST', {
