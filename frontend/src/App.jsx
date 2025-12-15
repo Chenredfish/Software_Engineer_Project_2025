@@ -13,6 +13,11 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import MovieDetailPage from "./pages/MovieDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import TopUpPage from "./pages/TopUpPage";
+import MealListPage from "./pages/MealListPage";
+import MealDetailPage from "./pages/MealDetailPage";
+
+
+
 
 function App() {
   return (
@@ -32,11 +37,11 @@ function App() {
         <Route path="/movies/:movieID" element={<MovieDetailPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/topup" element={<TopUpPage />} />
-
+        <Route path="/food" element={<MealListPage />} />
+        <Route path="/meals/:id" element={<MealDetailPage />} />
 
         {/* 以下都先未接入 */}
         <Route path="/activities" element={<Placeholder title="活動介紹" />} />
-        <Route path="/meals" element={<Placeholder title="餐飲介紹" />} />
         <Route path="/quick-search" element={<Placeholder title="快搜系統" />} />
       </Routes>
     </BrowserRouter>
