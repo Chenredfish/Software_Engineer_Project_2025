@@ -2,10 +2,23 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Button } from "@mui/material";
 import axios from "axios";
+import { useEffect, useState } from "react";
 
 export default function RelatedBrowsePage() {
   const navigate = useNavigate();
   const sessionToken = localStorage.getItem("sessionToken");
+  const [hotMovies, setHotMovies] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:3000/api/movies")
+      .then(res => {
+        setHotMovies(res.data.slice(0, 3));
+      })
+      .catch(() => {
+        console.error("取得電影失敗");
+      });
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -85,10 +98,33 @@ export default function RelatedBrowsePage() {
             （公告 API 尚未接入）
           </Typography>
 
-          <Typography sx={{ fontWeight: "bold", mb: 1 }}>熱門電影</Typography>
-          <Typography sx={{ fontSize: 14 }}>
-            （電影資料 API 尚未接入）
-          </Typography>
+          <Typography sx={{ fontWeight: "bold", mb: 1 }}>
+  熱門電影
+</Typography>
+
+<Box sx={{ display: "flex", gap: 2 }}>
+  {hotMovies.map(movie => (
+    <Box
+      key={movie.movieID}
+      sx={{ width: 120, cursor: "pointer" }}
+      onClick={() => navigate(`/movies/${movie.movieID}`)}
+    >
+      <Box
+        component="img"
+        src={`http://localhost:3000/${movie.moviePhoto}`}
+        alt={movie.movieName}
+        sx={{
+          width: "100%",
+          border: "1px solid #ccc"
+        }}
+      />
+      <Typography sx={{ fontSize: 12, mt: 0.5 }}>
+        {movie.movieName}
+      </Typography>
+    </Box>
+  ))}
+</Box>
+
         </Box>
 
         {/* 右側快搜 */}
