@@ -13,7 +13,7 @@ app.use(express.json());
 
 app.use(
   '/Photo',
-  express.static(path.resolve(__dirname, './DataBase/Photo'))
+  express.static(path.resolve(__dirname, './Photo'))
 );//為了讓照片能動加的，沒動其他東西，軒
 
 // 將資料庫實例附加到 app.locals，讓所有路由都能使用
@@ -153,7 +153,7 @@ app.post('/api/init-sample-data', async (req, res) => {
                 { ticketClassID: 'T00005', ticketClassName: '夜貓票', ticketClassPrice: 200, ticketInfo: '午夜 00:00 後場次' }
             ],
             meals: [
-                { mealsID: 'M00001', mealName: '爆米花套餐', mealsPrice: 250, mealsDisp: '經典爆米花加兩杯飲料', mealsPhoto: 'Photo/meals/popcorn_set.jpg' },
+                { mealsID: 'M00001', mealName: '爆米花套餐', mealsPrice: 250, mealsDisp: '經典爆米花加兩杯飲料', mealsPhoto: 'Photo/meals/popcorn.jpg' },
                 { mealsID: 'M00002', mealName: '熱狗堡', mealsPrice: 120, mealsDisp: '美式經典熱狗堡', mealsPhoto: 'Photo/meals/hotdog.jpg' },
                 { mealsID: 'M00003', mealName: '吉拿棒', mealsPrice: 80, mealsDisp: '灑滿肉桂粉', mealsPhoto: 'Photo/meals/churros.jpg' },
                 { mealsID: 'M00004', mealName: '汽水單杯', mealsPrice: 70, mealsDisp: '可口可樂/雪碧', mealsPhoto: 'Photo/meals/soda.jpg' },
@@ -243,7 +243,7 @@ app.post('/api/init-sample-data', async (req, res) => {
                     ratedID: 'R00003',
                     movieStartDate: '2013-05-31',
                     movieInfo: '四位魔術師執行不可能的搶劫計畫。',
-                    moviePhoto: 'Photo/movie/now_you_see_me.jpg',
+                    moviePhoto: 'Photo/movie/illusion.jpg',
                     director: '路易斯·賴托瑞',
                     actors: '傑西·艾森伯格, 馬克·盧法洛'
                 },
