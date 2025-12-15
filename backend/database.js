@@ -130,7 +130,7 @@ class Database {
                 versionID TEXT NOT NULL,
                 showingTime DATETIME NOT NULL,
                 FOREIGN KEY (movieID) REFERENCES movie(movieID),
-                FOREIGN KEY (theaterID) REFERENCES theater(theaterID),
+                FOREIGN KEY (theaterID) REFERENCES cinema(cinemaID),
                 FOREIGN KEY (versionID) REFERENCES version(versionID)
             )`,
 
