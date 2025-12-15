@@ -13,7 +13,7 @@ app.use(express.json());
 
 app.use(
   '/Photo',
-  express.static(path.resolve(__dirname, './DataBase/Photo'))
+  express.static(path.resolve(__dirname, './Photo'))
 );//為了讓照片能動加的，沒動其他東西，軒
 
 // 將資料庫實例附加到 app.locals，讓所有路由都能使用
