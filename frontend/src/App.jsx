@@ -10,6 +10,7 @@ import MemberPage from "./pages/MemberPage";
 import MoviesPage from "./pages/MoviesPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import MovieDetailPage from "./pages/MovieDetailPage";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/member" element={<MemberPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/movies/:movieID" element={<MovieDetailPage />} />
 
 
         {/* 以下都先未接入 */}
