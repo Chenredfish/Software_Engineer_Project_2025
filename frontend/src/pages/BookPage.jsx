@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Divider, Button, Paper } from "@mui/material";
+import { Box, Typography, Divider } from "@mui/material";
 
 import MovieSelect from "../InputComponent/MovieSelect";
-import CinemaSelect from "../InputComponent/CinemaSelect";
+import CinemaSelect from "../InputComponent/cinemaSelect";
+import TheaterSelect from "../InputComponent/theaterselect"; // 新增
 import SessionSelect from "../InputComponent/SessionSelect";
 import DateSelect from "../InputComponent/DateSelect";
 import SeatMap from "../InputComponent/SeatSelect";
@@ -10,10 +11,12 @@ import SeatMap from "../InputComponent/SeatSelect";
 export default function BookPage() {
   const [movies, setMovies] = useState([]);
   const [cinemas, setCinemas] = useState([]);
+  const [theaters, setTheaters] = useState([]);
   const [sessions, setSessions] = useState([]);
 
   const [movieId, setMovieId] = useState("");
   const [cinemaId, setCinemaId] = useState("");
+  const [theaterId, setTheaterId] = useState("");
   const [sessionId, setSessionId] = useState("");
   const [date, setDate] = useState("");
   const [selectedSession, setSelectedSession] = useState(null);
@@ -50,9 +53,41 @@ export default function BookPage() {
     fetchCinemas();
   }, []);
 
-  /* ---------------- 依電影 + 影城取得場次 ---------------- */
+  /* ---------------- 依 cinemaID 取得 theater ---------------- */
   useEffect(() => {
-    if (!movieId || !cinemaId) {
+    if (!cinemaId) {
+      setTheaters([]);
+      setTheaterId("");
+      setSessions([]);
+      setSessionId("");
+      setSelectedSession(null);
+      setDate("");
+      return;
+    }
+
+    const fetchTheaters = async () => {
+      try {
+        const res = await fetch(`${apiBase}/api/theaters?cinemaID=${cinemaId}`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data = await res.json();
+        setTheaters(data);
+        setTheaterId("");
+        setSessions([]);
+        setSessionId("");
+        setSelectedSession(null);
+        setDate("");
+      } catch (err) {
+        console.error("Fetch theaters error:", err);
+        alert("影廳資料讀取失敗：" + err.message);
+      }
+    };
+
+    fetchTheaters();
+  }, [cinemaId]);
+
+  /* ---------------- 依 movieID + theaterID 取得場次 ---------------- */
+  useEffect(() => {
+    if (!movieId || !theaterId) {
       setSessions([]);
       setSessionId("");
       setSelectedSession(null);
@@ -63,11 +98,26 @@ export default function BookPage() {
     const fetchSessions = async () => {
       try {
         const res = await fetch(
-          `${apiBase}/api/showings?movieID=${movieId}&cinemaID=${cinemaId}`
+          `${apiBase}/api/showings?movieID=${movieId}&theaterID=${theaterId}`
         );
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
-        setSessions(data);
+
+        const mapped = data.map((s) => {
+          const dt = new Date(s.showingTime);
+          const dateStr = dt.toISOString().split("T")[0];
+          const timeStr = dt.toTimeString().split(" ")[0].slice(0, 5);
+          const movie = movies.find((m) => m.movieID === s.movieID);
+          return {
+            ...s,
+            date: dateStr,
+            startTime: timeStr,
+            movieName: movie?.movieName || "未知電影",
+            price: 300
+          };
+        });
+
+        setSessions(mapped);
         setSessionId("");
         setSelectedSession(null);
         setDate("");
@@ -78,7 +128,7 @@ export default function BookPage() {
     };
 
     fetchSessions();
-  }, [movieId, cinemaId]);
+  }, [movieId, theaterId, movies]);
 
   /* ---------------- UI ---------------- */
   return (
@@ -94,43 +144,19 @@ export default function BookPage() {
         <Box sx={{ minWidth: 280 }}>
           <MovieSelect movies={movies} value={movieId} onChange={setMovieId} />
           <CinemaSelect cinemas={cinemas} value={cinemaId} onChange={setCinemaId} />
+          <TheaterSelect theaters={theaters} value={theaterId} onChange={setTheaterId} />
           <SessionSelect
-            movieID={movieId}
-            cinemaID={cinemaId}
+            sessions={sessions}
             value={sessionId}
             onChange={(id) => {
               setSessionId(id);
               const session = sessions.find((s) => s.showingID === id);
               setSelectedSession(session);
-              if (session) setDate(session.date); // 選場次帶出日期
+              if (session) setDate(session.date);
             }}
-            setDate={setDate}
           />
           <DateSelect dates={date ? [date] : []} value={date} onChange={setDate} />
         </Box>
-
-        {/* 右：查詢結果 */}
-        <Paper sx={{ p: 3, minWidth: 320 }}>
-          <Typography fontWeight="bold">查詢結果</Typography>
-
-          {selectedSession ? (
-            <>
-              <Typography sx={{ mt: 2 }}>
-                電影：{selectedSession.movieName}
-              </Typography>
-              <Typography>時間：{selectedSession.startTime}</Typography>
-              <Typography color="error">金額：${selectedSession.price}</Typography>
-
-              <Button sx={{ mt: 2 }} variant="contained">
-                選擇座位
-              </Button>
-            </>
-          ) : (
-            <Typography sx={{ mt: 2 }} color="text.secondary">
-              請先選擇電影、影城與場次
-            </Typography>
-          )}
-        </Paper>
       </Box>
 
       {/* 座位 */}
