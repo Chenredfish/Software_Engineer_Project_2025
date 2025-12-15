@@ -12,6 +12,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import MovieDetailPage from "./pages/MovieDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
+import TopUpPage from "./pages/TopUpPage";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/movies/:movieID" element={<MovieDetailPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/topup" element={<TopUpPage />} />
 
 
         {/* 以下都先未接入 */}
