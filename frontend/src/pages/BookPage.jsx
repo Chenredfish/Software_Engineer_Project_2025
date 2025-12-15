@@ -54,6 +54,7 @@ export default function BookPage() {
   }, []);
 
   /* ---------------- 依 cinemaID 取得 theater ---------------- */
+  // 依 cinemaID 取得 theater
   useEffect(() => {
     if (!cinemaId) {
       setTheaters([]);
@@ -67,10 +68,11 @@ export default function BookPage() {
 
     const fetchTheaters = async () => {
       try {
-        const res = await fetch(`${apiBase}/api/theaters?cinemaID=${cinemaId}`);
+        const res = await fetch(`${apiBase}/api/cinemas/${cinemaId}/theaters`);
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
-        setTheaters(data);
+        
+        setTheaters(data.theaters || []);
         setTheaterId("");
         setSessions([]);
         setSessionId("");
