@@ -73,7 +73,7 @@ export default function LoginPage() {
         {[
           { label: "影城介紹", path: "/cinemas" },
           { label: "活動介紹", path: "/event" },
-          { label: "電影介紹", path: "/movie" },
+          { label: "電影介紹", path: "/movies" },
           { label: "餐飲介紹", path: "/food" },
           { label: "訂票系統", path: "/book" }, // ⭐ 重點
           { label: "快搜系統", path: "/search" },
