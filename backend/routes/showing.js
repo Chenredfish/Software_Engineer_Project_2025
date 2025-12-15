@@ -335,68 +335,6 @@ router.post('/reserve', async (req, res) => {
         });
     }
 });
-// routes/showing.js
-
-// 引入 Express 和 Router 實例... (假設已完成)
-// const express = require('express');
-// const router = express.Router();
-// ...
-
-// ----------------------------------------------------
-// API: 查詢電影所有場次 (GET /api/movies/:id/showings)
-// ----------------------------------------------------
-router.get('/movies/:id/showings', async (req, res) => {
-    try {
-        const movieID = req.params.id; // 取得 URL 參數中的電影 ID
-
-        if (!movieID) {
-            return res.status(400).json({ 
-                success: false, 
-                error: '請提供有效的電影 ID' 
-            });
-        }
-
-        const db = req.app.locals.db;
-        
-        // 1. 查詢所有屬於該 movieID 且尚未過期的場次
-        // ⚠️ 假設 showingTime 欄位儲存為可比較的格式 (例如 ISO 8601 字符串或 Epoch Time)
-        const now = new Date().toISOString(); 
-        
-        const showings = await db.findAll('showing', {
-            movieID: movieID,
-            // 選擇性加入過濾條件：只顯示未開始的場次
-            // 例如: WHERE showingTime > ?
-            // 如果 db.findAll 不支援複雜條件，您可能需要使用 db.query
-        });
-
-        // 2. 為了確保資料完整性，建議取出該場次的影廳、版本等資訊
-        // 這裡僅簡單回傳 showing 表的結果。
-        // 如果需要 JOIN 查詢，建議使用 db.query
-        
-        if (showings.length === 0) {
-            return res.status(404).json({ 
-                success: true, 
-                message: `找不到電影 ID: ${movieID} 的任何場次`,
-                showings: []
-            });
-        }
-
-        res.json({ 
-            success: true, 
-            movieID: movieID,
-            count: showings.length,
-            showings: showings 
-        });
-
-    } catch (error) {
-        console.error('查詢電影場次失敗:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: '伺服器內部錯誤，無法查詢電影場次', 
-            details: error.message 
-        });
-    }
-});
 
 // module.exports = router; // 記得匯出路由
 

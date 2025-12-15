@@ -152,4 +152,55 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// ----------------------------------------------------
+// API: 查詢電影所有場次 (GET /api/movies/:id/showings)
+// ----------------------------------------------------
+// ❗ 注意：路徑只寫 '/:id/showings'，因為它將被掛載到 /api/movies 前綴下
+router.get('/:id/showings', async (req, res) => {
+    try {
+        const movieID = req.params.id; // 取得 URL 參數中的電影 ID
+
+        if (!movieID) {
+            return res.status(400).json({ 
+                success: false, 
+                error: '請提供有效的電影 ID' 
+            });
+        }
+
+        const db = req.app.locals.db;
+        
+        // 1. 查詢所有屬於該 movieID 的場次
+        const showings = await db.findAll('showing', {
+            movieID: movieID,
+            // 這裡可以選擇性加入過濾條件，例如 showingTime > NOW()
+        });
+        
+        // 2. 為了更完整的資訊，建議使用 db.query 進行 JOIN 查詢
+        // 這裡暫時只回傳 showing 表的結果。
+        
+        if (showings.length === 0) {
+            return res.status(404).json({ 
+                success: true, // 雖然找不到場次，但查詢本身成功
+                message: `找不到電影 ID: ${movieID} 的任何場次`,
+                showings: []
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            movieID: movieID,
+            count: showings.length,
+            showings: showings 
+        });
+
+    } catch (error) {
+        console.error('查詢電影場次失敗:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: '伺服器內部錯誤，無法查詢電影場次', 
+            details: error.message 
+        });
+    }
+});
+
 module.exports = router;
