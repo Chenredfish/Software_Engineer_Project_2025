@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Box, Typography, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function ForgotPasswordPage() {
+  const navigate = useNavigate();
+
   const [account, setAccount] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 發送重設密碼（寄信）
+  // 發送驗證碼
   const handleSendMail = async () => {
     setError("");
     setSuccessMsg("");
@@ -36,7 +39,7 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  // 確認（前端驗證用）
+  // ✅ 驗證成功後直接跳 reset
   const handleConfirm = () => {
     setError("");
     setSuccessMsg("");
@@ -51,19 +54,18 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    // ⚠️ 這裡只是前端示意
-    setSuccessMsg("驗證成功，請至信箱點擊重設密碼連結");
+    // ⭐ 關鍵：跳轉到 reset 頁，把資料一起帶過去
+    navigate("/reset-password", {
+      state: {
+        account,
+        verificationCode: verifyCode
+      }
+    });
   };
 
   return (
     <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
-      <Box
-        sx={{
-          width: 420,
-          border: "2px solid #000",
-          p: 4
-        }}
-      >
+      <Box sx={{ width: 420, border: "2px solid #000", p: 4 }}>
         <Typography sx={{ textAlign: "center", fontWeight: "bold", mb: 3 }}>
           忘記密碼
         </Typography>
@@ -78,11 +80,7 @@ export default function ForgotPasswordPage() {
             value={account}
             onChange={e => setAccount(e.target.value)}
             placeholder="請輸入電子信箱"
-            style={{
-              flex: 1,
-              padding: "8px",
-              boxSizing: "border-box"
-            }}
+            style={{ flex: 1, padding: "8px" }}
           />
 
           <Button
@@ -106,30 +104,22 @@ export default function ForgotPasswordPage() {
           style={{
             width: "100%",
             padding: "8px",
-            boxSizing: "border-box",
             marginBottom: "12px"
           }}
         />
 
-        {/* 確認 */}
         <Button fullWidth variant="outlined" onClick={handleConfirm}>
           確認
         </Button>
 
-        {/* 錯誤訊息 */}
         {error && (
-          <Typography
-            sx={{ color: "red", fontSize: 12, mt: 2, textAlign: "center" }}
-          >
+          <Typography sx={{ color: "red", fontSize: 12, mt: 2, textAlign: "center" }}>
             {error}
           </Typography>
         )}
 
-        {/* 成功訊息 */}
         {successMsg && (
-          <Typography
-            sx={{ fontSize: 13, mt: 2, textAlign: "center" }}
-          >
+          <Typography sx={{ fontSize: 13, mt: 2, textAlign: "center" }}>
             {successMsg}
           </Typography>
         )}
