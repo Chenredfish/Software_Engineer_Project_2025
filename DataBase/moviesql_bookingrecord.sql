@@ -26,7 +26,7 @@ CREATE TABLE `bookingrecord` (
   `orderID` char(6) NOT NULL,
   `ticketID` char(6) NOT NULL,
   `memberID` char(10) NOT NULL,
-  `shwingID` char(6) NOT NULL,
+  `showingID` char(6) NOT NULL,
   `orderStateID` char(6) NOT NULL,
   `mealsID` char(6) NOT NULL,
   `ticketTypeID` char(6) NOT NULL,
@@ -38,12 +38,12 @@ CREATE TABLE `bookingrecord` (
   KEY `fk_br_orderstatus` (`orderStateID`),
   KEY `fk_br_meals` (`mealsID`),
   KEY `fk_br_ticketclass` (`ticketTypeID`),
-  KEY `fk_br_seat` (`shwingID`,`seatID`),
+  KEY `fk_br_seat` (`showingID`,`seatID`),
   CONSTRAINT `fk_br_meals` FOREIGN KEY (`mealsID`) REFERENCES `meals` (`mealsID`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_br_member` FOREIGN KEY (`memberID`) REFERENCES `member` (`memberID`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_br_orderstatus` FOREIGN KEY (`orderStateID`) REFERENCES `orderstatus` (`orderStatusID`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `fk_br_seat` FOREIGN KEY (`shwingID`, `seatID`) REFERENCES `seat` (`showingID`, `seatNumber`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `fk_br_showing_id` FOREIGN KEY (`shwingID`) REFERENCES `showing` (`showingID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_br_seat` FOREIGN KEY (`showingID`, `seatID`) REFERENCES `seat` (`showingID`, `seatNumber`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_br_showing_id` FOREIGN KEY (`showingID`) REFERENCES `showing` (`showingID`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_br_ticketclass` FOREIGN KEY (`ticketTypeID`) REFERENCES `ticketclass` (`ticketClassID`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;

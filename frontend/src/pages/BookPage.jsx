@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Divider } from "@mui/material";
+import { Box, Typography, Divider, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 import MovieSelect from "../InputComponent/MovieSelect";
 import CinemaSelect from "../InputComponent/CinemaSelect";
-import TheaterSelect from "../InputComponent/theaterselect"; // 新增
+import TheaterSelect from "../InputComponent/theaterselect";
 import SessionSelect from "../InputComponent/SessionSelect";
-import DateSelect from "../InputComponent/DateSelect";
-import SeatMap from "../InputComponent/SeatSelect";
 
 export default function BookPage() {
+  const navigate = useNavigate();
+
   const [movies, setMovies] = useState([]);
   const [cinemas, setCinemas] = useState([]);
   const [theaters, setTheaters] = useState([]);
@@ -18,43 +19,24 @@ export default function BookPage() {
   const [cinemaId, setCinemaId] = useState("");
   const [theaterId, setTheaterId] = useState("");
   const [sessionId, setSessionId] = useState("");
-  const [date, setDate] = useState("");
   const [selectedSession, setSelectedSession] = useState(null);
 
   const apiBase = "http://localhost:3000";
 
-  /* ---------------- 取得電影與影城資料 ---------------- */
+  /* ----------- 取得電影 & 影城 ----------- */
   useEffect(() => {
-    const fetchMovies = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/movies`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        setMovies(data);
-      } catch (err) {
-        console.error("Fetch movies error:", err);
-        alert("電影資料讀取失敗：" + err.message);
-      }
-    };
+    fetch(`${apiBase}/api/movies`)
+      .then(res => res.json())
+      .then(setMovies)
+      .catch(err => alert("電影資料讀取失敗"));
 
-    const fetchCinemas = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/cinemas`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        setCinemas(data);
-      } catch (err) {
-        console.error("Fetch cinemas error:", err);
-        alert("影城資料讀取失敗：" + err.message);
-      }
-    };
-
-    fetchMovies();
-    fetchCinemas();
+    fetch(`${apiBase}/api/cinemas`)
+      .then(res => res.json())
+      .then(setCinemas)
+      .catch(err => alert("影城資料讀取失敗"));
   }, []);
 
-  /* ---------------- 依 cinemaID 取得 theater ---------------- */
-  // 依 cinemaID 取得 theater
+  /* ----------- cinema → theaters ----------- */
   useEffect(() => {
     if (!cinemaId) {
       setTheaters([]);
@@ -62,77 +44,52 @@ export default function BookPage() {
       setSessions([]);
       setSessionId("");
       setSelectedSession(null);
-      setDate("");
       return;
     }
 
-    const fetchTheaters = async () => {
-      try {
-        const res = await fetch(`${apiBase}/api/cinemas/${cinemaId}/theaters`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        
+    fetch(`${apiBase}/api/cinemas/${cinemaId}/theaters`)
+      .then(res => res.json())
+      .then(data => {
         setTheaters(data.theaters || []);
         setTheaterId("");
         setSessions([]);
         setSessionId("");
         setSelectedSession(null);
-        setDate("");
-      } catch (err) {
-        console.error("Fetch theaters error:", err);
-        alert("影廳資料讀取失敗：" + err.message);
-      }
-    };
-
-    fetchTheaters();
+      })
+      .catch(() => alert("影廳資料讀取失敗"));
   }, [cinemaId]);
 
-  /* ---------------- 依 movieID + theaterID 取得場次 ---------------- */
+  /* ----------- movie + theater → sessions ----------- */
   useEffect(() => {
     if (!movieId || !theaterId) {
       setSessions([]);
       setSessionId("");
       setSelectedSession(null);
-      setDate("");
       return;
     }
 
-    const fetchSessions = async () => {
-      try {
-        const res = await fetch(
-          `${apiBase}/api/showings?movieID=${movieId}&theaterID=${theaterId}`
-        );
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-
-        const mapped = data.map((s) => {
-          const dt = new Date(s.showingTime);
-          const dateStr = dt.toISOString().split("T")[0];
-          const timeStr = dt.toTimeString().split(" ")[0].slice(0, 5);
-          const movie = movies.find((m) => m.movieID === s.movieID);
-          return {
-            ...s,
-            date: dateStr,
-            startTime: timeStr,
-            movieName: movie?.movieName || "未知電影",
-            price: 300
-          };
-        });
-
-        setSessions(mapped);
+    fetch(
+      `${apiBase}/api/showings?movieID=${movieId}&theaterID=${theaterId}`
+    )
+      .then(res => res.json())
+      .then(data => {
+        setSessions(data || []);
         setSessionId("");
         setSelectedSession(null);
-        setDate("");
-      } catch (err) {
-        console.error("Fetch showings error:", err);
-        alert("場次資料讀取失敗：" + err.message);
-      }
-    };
+      })
+      .catch(() => alert("場次資料讀取失敗"));
+  }, [movieId, theaterId]);
 
-    fetchSessions();
-  }, [movieId, theaterId, movies]);
+  /* ----------- 前往 SeatPage ----------- */
+  const handleBooking = () => {
+    if (!selectedSession) return;
 
-  /* ---------------- UI ---------------- */
+    // 使用 navigate state 傳資料
+    navigate(`/seat/${selectedSession.showingID}`, {
+      state: { showing: selectedSession },
+    });
+  };
+
   return (
     <Box sx={{ maxWidth: 1100, mx: "auto", mt: 4 }}>
       <Typography variant="h5" fontWeight="bold">
@@ -141,28 +98,32 @@ export default function BookPage() {
 
       <Divider sx={{ my: 2 }} />
 
-      <Box display="flex" gap={4}>
-        {/* 左：查詢條件 */}
-        <Box sx={{ minWidth: 280 }}>
-          <MovieSelect movies={movies} value={movieId} onChange={setMovieId} />
-          <CinemaSelect cinemas={cinemas} value={cinemaId} onChange={setCinemaId} />
-          <TheaterSelect theaters={theaters} value={theaterId} onChange={setTheaterId} />
-          <SessionSelect
-            sessions={sessions}
-            value={sessionId}
-            onChange={(id) => {
-              setSessionId(id);
-              const session = sessions.find((s) => s.showingID === id);
-              setSelectedSession(session);
-              if (session) setDate(session.date);
-            }}
-          />
-          <DateSelect dates={date ? [date] : []} value={date} onChange={setDate} />
-        </Box>
-      </Box>
+      <Box sx={{ width: 300 }}>
+        <MovieSelect movies={movies} value={movieId} onChange={setMovieId} />
+        <CinemaSelect cinemas={cinemas} value={cinemaId} onChange={setCinemaId} />
+        <TheaterSelect theaters={theaters} value={theaterId} onChange={setTheaterId} />
 
-      {/* 座位 */}
-      {selectedSession && <SeatMap />}
+        <SessionSelect
+          sessions={sessions}
+          value={sessionId}
+          onChange={(id) => {
+            setSessionId(id);
+            setSelectedSession(
+              sessions.find((s) => s.showingID === id)
+            );
+          }}
+        />
+
+        <Button
+          fullWidth
+          variant="contained"
+          sx={{ mt: 3 }}
+          disabled={!selectedSession}
+          onClick={handleBooking}
+        >
+          前往選座位
+        </Button>
+      </Box>
     </Box>
   );
 }

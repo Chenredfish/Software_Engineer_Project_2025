@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from "react";
 
 // 整合用途: 已實作完整的座位選擇功能 (B22)
 // 假設資料庫傳回的已售出座位 (示例)

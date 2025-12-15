@@ -15,6 +15,7 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import TopUpPage from "./pages/TopUpPage";
 import MealListPage from "./pages/MealListPage";
 import MealDetailPage from "./pages/MealDetailPage";
+import SeatPage from "./pages/SeatPage";
 
 
 
@@ -39,7 +40,7 @@ function App() {
         <Route path="/topup" element={<TopUpPage />} />
         <Route path="/food" element={<MealListPage />} />
         <Route path="/meals/:id" element={<MealDetailPage />} />
-
+        <Route path="/seat/:showingID" element={<SeatPage />} />
         {/* 以下都先未接入 */}
         <Route path="/activities" element={<Placeholder title="活動介紹" />} />
         <Route path="/quick-search" element={<Placeholder title="快搜系統" />} />

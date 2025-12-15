@@ -10,15 +10,17 @@ export default function SessionSelect({ sessions, value, onChange }) {
       label="場次"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      helperText="請選擇場次"
       sx={{ mt: 2 }}
+      disabled={sessions.length === 0}
     >
       {sessions.length === 0 ? (
-        <MenuItem disabled>請先選擇電影與影城</MenuItem>
+        <MenuItem value="" disabled>
+          請先選擇電影與影廳
+        </MenuItem>
       ) : (
         sessions.map((s) => (
           <MenuItem key={s.showingID} value={s.showingID}>
-            {s.date} {s.startTime}
+            {s.showingTime} {/* 直接顯示完整時間 */}
           </MenuItem>
         ))
       )}
