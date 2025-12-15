@@ -94,7 +94,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     // 不允許直接修改 memberID 和 memberBalance
     const { memberID, memberBalance, ...updateData } = req.body;
     
-    await db.update('member', { memberID: req.params.id }, updateData);
+    await db.update('member', updateData, { memberID: req.params.id });//聽說換順序就可以更新資料庫了， 軒
     res.json({ 
       success: true,
       message: '更新會員資料成功' 

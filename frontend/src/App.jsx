@@ -6,6 +6,7 @@ import RelatedBrowsePage from "./pages/RelatedBrowsePage";
 import CinemasPage from "./pages/CinemasPage";
 import CinemaDetailPage from "./pages/CinemaDetailPage";
 import BookPage from "./pages/BookPage";
+import MemberPage from "./pages/MemberPage";
 
 function App() {
   return (
@@ -18,10 +19,10 @@ function App() {
         <Route path="/cinemas" element={<CinemasPage />} />
         <Route path="/cinemas/:id" element={<CinemaDetailPage />} />
         <Route path="/book" element={<BookPage />} />
+        <Route path="/member" element={<MemberPage />} />
 
 
         {/* 以下都先未接入 */}
-        <Route path="/member" element={<Placeholder title="會員資料" />} />
         <Route path="/movies" element={<Placeholder title="電影介紹" />} />
         <Route path="/activities" element={<Placeholder title="活動介紹" />} />
         <Route path="/meals" element={<Placeholder title="餐飲介紹" />} />
