@@ -95,7 +95,25 @@ export default function LoginPage() {
           >
             {item.label}
           </Typography>
+
         ))}
+        {/* ⭐ 新增的分隔線 */}
+        <Typography sx={{ fontSize: 14 }}>|</Typography>
+
+        {/* ⭐ 管理員登入（就在登入/註冊會員右邊） */}
+        <Typography
+          component={RouterLink}
+          to="/admin/login"
+          sx={{
+            fontSize: 14,
+            color: "#000",
+            textDecoration: "none",
+            cursor: "pointer",
+            "&:hover": { textDecoration: "underline" }
+          }}
+        >
+          管理員登入
+        </Typography>
       </Box>
 
       {/* 中間置中框框 */}
