@@ -391,7 +391,7 @@ router.post('/forgot-password', async (req, res) => {
         res.json({ 
             success: true, 
             message: mailSent 
-                ? '驗證碼已發送到您的郵箱，請檢查收件箱。' 
+                ? '若帳號存在，驗證碼已發送到您的郵箱' 
                 : '驗證碼已生成，但郵件發送失敗，請聯繫客服。'
             // 🚨 注意：不再回傳 verificationCode 給前端，只用於測試
         });

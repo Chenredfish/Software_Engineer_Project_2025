@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
       );
 
       if (res.data.success) {
-        setSuccessMsg("驗證碼已寄送至您的信箱");
+        setSuccessMsg("若帳號存在，驗證碼已發送到您的郵箱");
       }
     } catch {
       setError("系統錯誤，請稍後再試");
