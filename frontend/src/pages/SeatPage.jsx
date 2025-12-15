@@ -74,7 +74,7 @@ export default function SeatSelectPage() {
 
       <Box mt={4}>
         <Button variant="contained" color="primary" onClick={handleNext}>
-          去付款
+          前往付款
         </Button>
       </Box>
     </Box>
