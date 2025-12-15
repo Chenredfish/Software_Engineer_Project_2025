@@ -296,11 +296,11 @@ app.post('/api/init-sample-data', async (req, res) => {
             // 我假設這是一個專門記錄已發出票券的 ID，且與 orderID 暫時相同。
             // 關聯表
             showing: [
-                { showingID: 'H00001', movieID: 'D00001', theaterID: 'T00001', versionID: 'V00002', showingTime: '2024-12-15 14:30:00' },
-                { showingID: 'H00002', movieID: 'D00002', theaterID: 'T00002', versionID: 'V00001', showingTime: '2024-12-15 16:45:00' },
-                { showingID: 'H00003', movieID: 'D00003', theaterID: 'T00003', versionID: 'V00004', showingTime: '2024-12-15 19:20:00' },
-                { showingID: 'H00004', movieID: 'D00004', theaterID: 'T00004', versionID: 'V00001', showingTime: '2024-12-15 21:30:00' },
-                { showingID: 'H00005', movieID: 'D00005', theaterID: 'T00005', versionID: 'V00003', showingTime: '2024-12-15 22:15:00' }
+                { showingID: 'H00001', movieID: 'D00001', cinemaID: 'C00001', versionID: 'V00002', showingTime: '2024-12-15 14:30:00' },
+                { showingID: 'H00002', movieID: 'D00002', cinemaID: 'C00002', versionID: 'V00001', showingTime: '2024-12-15 16:45:00' },
+                { showingID: 'H00003', movieID: 'D00003', cinemaID: 'C00003', versionID: 'V00004', showingTime: '2024-12-15 19:20:00' },
+                { showingID: 'H00004', movieID: 'D00004', cinemaID: 'C00004', versionID: 'V00001', showingTime: '2024-12-15 21:30:00' },
+                { showingID: 'H00005', movieID: 'D00005', cinemaID: 'C00005', versionID: 'V00003', showingTime: '2024-12-15 22:15:00' }
             ],
             // 新增：seat (座位) 資料
             // 確保 seatID 與 bookingrecord 中引用的 S00001~S00005 匹配
