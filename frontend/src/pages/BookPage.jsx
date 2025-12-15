@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Typography, Divider } from "@mui/material";
 
 import MovieSelect from "../InputComponent/MovieSelect";
-import CinemaSelect from "../InputComponent/cinemaSelect";
+import CinemaSelect from "../InputComponent/CinemaSelect";
 import TheaterSelect from "../InputComponent/theaterselect"; // 新增
 import SessionSelect from "../InputComponent/SessionSelect";
 import DateSelect from "../InputComponent/DateSelect";
