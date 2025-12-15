@@ -15,7 +15,7 @@ export default function SessionSelect({ sessions, value, onChange }) {
     >
       {sessions.length === 0 ? (
         <MenuItem value="" disabled>
-          請先選擇電影與影廳
+          請先選擇電影和影廳
         </MenuItem>
       ) : (
         sessions.map((s) => (
