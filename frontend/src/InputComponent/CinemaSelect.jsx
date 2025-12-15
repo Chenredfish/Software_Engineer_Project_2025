@@ -10,17 +10,14 @@ export default function CinemaSelect({ cinemas, value, onChange }) {
       label="影城"
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      helperText="請選擇影城"
       sx={{ mt: 2 }}
     >
-      {cinemas.length === 0 ? (
-        <MenuItem value="" disabled>影城資料讀取中</MenuItem>
-      ) : (
-        cinemas.map((c) => (
-          <MenuItem key={c.cinemaID} value={c.cinemaID}>
-            {c.cinemaName}
-          </MenuItem>
-        ))
-      )}
+      {cinemas.map((c) => (
+        <MenuItem key={c.cinemaID} value={c.cinemaID}>
+          {c.cinemaName}
+        </MenuItem>
+      ))}
     </TextField>
   );
 }
