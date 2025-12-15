@@ -238,4 +238,121 @@ router.delete('/:id', requireAuth, async (req, res) => {
   }
 });
 
+// 假設您有一個 generateOrderID 函數，用於生成不重複的訂單 ID
+function generateOrderID() {
+    return 'B' + Date.now().toString().slice(-8) + Math.random().toString(36).substring(2, 6).toUpperCase();
+}
+
+// ----------------------------------------------------
+// API: 完整訂票流程 (POST /api/bookings/create)
+// ----------------------------------------------------
+router.post('/create', async (req, res) => {
+    const db = req.app.locals.db;
+    const { memberID, showingID, seatNumbers, ticketTypeID, unitPrice } = req.body;
+
+    if (!memberID || !showingID || !seatNumbers || seatNumbers.length === 0 || !ticketTypeID || !unitPrice) {
+        return res.status(400).json({ success: false, error: '請提供完整的訂票資訊' });
+    }
+
+    const totalAmount = unitPrice * seatNumbers.length;
+    let orderID = null;
+
+    try {
+        // 1. 交易開始
+        await db.beginTransaction();
+        
+        // --- 2. 檢查座位狀態 (原子性操作) ---
+        const placeholders = seatNumbers.map(() => '?').join(',');
+        const seatCheckQuery = `
+            SELECT seatNumber, seatState 
+            FROM seat 
+            WHERE showingID = ? AND seatNumber IN (${placeholders})
+        `;
+        const seats = await db.query(seatCheckQuery, [showingID, ...seatNumbers]);
+
+        if (seats.length !== seatNumbers.length) {
+            // 請求的座位數量和找到的座位數量不符
+            throw new Error('請求的座位號碼部分或全部不存在。');
+        }
+
+        const unavailableSeats = seats.filter(s => s.seatState !== 0);
+        if (unavailableSeats.length > 0) {
+            throw new Error(`座位已被預訂或鎖定: ${unavailableSeats.map(s => s.seatNumber).join(', ')}`);
+        }
+        
+        // --- 3. & 4. 檢查餘額並扣款 (原子性操作) ---
+        const [member] = await db.findAll('member', { memberID: memberID });
+        if (!member) {
+            throw new Error('會員 ID 不存在。');
+        }
+
+        if (member.memberBalance < totalAmount) {
+            throw new Error(`餘額不足。所需金額: ${totalAmount}, 當前餘額: ${member.memberBalance}`);
+        }
+        
+        const newBalance = member.memberBalance - totalAmount;
+        
+        // 執行扣款
+        await db.update('member', 
+            { memberBalance: newBalance }, 
+            { memberID: memberID }
+        );
+
+        // --- 5. 建立訂單主記錄 (orderrecord) ---
+        orderID = generateOrderID();
+        // 假設訂單狀態 S00001 = 交易成功
+        await db.insert('orderrecord', {
+            orderID: orderID,
+            memberID: memberID,
+            orderDate: new Date().toISOString(),
+            orderStateID: 'S00001', 
+            orderAmount: totalAmount
+        });
+        
+        // --- 6. 建立訂票子記錄 (bookingrecord) & 7. 更新座位狀態 ---
+        const seatUpdateQuery = `
+            UPDATE seat SET seatState = 1 WHERE showingID = ? AND seatNumber IN (${placeholders})
+        `;
+        await db.query(seatUpdateQuery, [showingID, ...seatNumbers]);
+
+        const bookingRecords = seatNumbers.map(seatNumber => ({
+            orderID: orderID,
+            showingID: showingID,
+            seatNumber: seatNumber,
+            ticketTypeID: ticketTypeID,
+            ticketPrice: unitPrice,
+            orderStateID: 'S00001' 
+        }));
+        
+        // 由於 db.insert 不支援批次插入，您需要自行迭代或使用自定義的批次插入方法
+        // 這裡我們假設 db.insert 可以接受單一物件，所以我們需要迴圈插入
+        for (const record of bookingRecords) {
+            await db.insert('bookingrecord', record);
+        }
+
+        // 8. 交易提交
+        await db.commit();
+
+        res.status(201).json({ 
+            success: true, 
+            message: '訂票成功，已完成扣款與訂單建立',
+            orderID: orderID,
+            reservedSeats: seatNumbers,
+            totalAmount: totalAmount,
+            newBalance: newBalance
+        });
+
+    } catch (error) {
+        // 失敗則回滾
+        await db.rollback();
+        console.error('訂票交易失敗 (已回滾):', error.message);
+        
+        res.status(400).json({ 
+            success: false, 
+            error: error.message || '訂票流程失敗，交易已回滾',
+            details: error.message 
+        });
+    }
+});
+
 module.exports = router;

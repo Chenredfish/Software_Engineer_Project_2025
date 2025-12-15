@@ -153,12 +153,12 @@ router.delete('/:id', async (req, res) => {
 });
 
 // ----------------------------------------------------
-// API: 查詢電影所有場次 (GET /api/movies/:id/showings)
+// API: 查詢電影所有場次 (GET /api/movies/:id/showings?cinemaId=...)
 // ----------------------------------------------------
-// ❗ 注意：路徑只寫 '/:id/showings'，因為它將被掛載到 /api/movies 前綴下
 router.get('/:id/showings', async (req, res) => {
     try {
         const movieID = req.params.id; // 取得 URL 參數中的電影 ID
+        const cinemaID = req.query.cinemaId; // 取得查詢字串中的 cinemaId 參數 (用於篩選影城)
 
         if (!movieID) {
             return res.status(400).json({ 
@@ -166,29 +166,58 @@ router.get('/:id/showings', async (req, res) => {
                 error: '請提供有效的電影 ID' 
             });
         }
-
+        
         const db = req.app.locals.db;
+        let showings;
         
-        // 1. 查詢所有屬於該 movieID 的場次
-        const showings = await db.findAll('showing', {
-            movieID: movieID,
-            // 這裡可以選擇性加入過濾條件，例如 showingTime > NOW()
-        });
+        if (cinemaID) {
+            // 🚨 情況一：同時篩選電影 ID 和影城 ID (需要 JOIN theater 表)
+            // SQL 查詢將聯結 showing 和 theater 表，並篩選兩個 ID 
+            const query = `
+                SELECT 
+                    S.showingID, 
+                    S.movieID, 
+                    S.theaterID, 
+                    T.theaterName,  -- 來自 theater 表
+                    S.versionID,    -- 來自 showing 表
+                    S.showingTime
+                FROM showing S
+                JOIN theater T ON S.theaterID = T.theaterID
+                WHERE S.movieID = ? AND T.cinemaID = ?
+                ORDER BY S.showingTime ASC
+            `;
+            
+            showings = await db.query(query, [movieID, cinemaID]);
+
+            if (showings.length === 0) {
+                return res.status(404).json({ 
+                    success: true, // 查詢成功，但無資料
+                    message: `找不到電影 ID: ${movieID} 在影城 ID: ${cinemaID} 的任何場次`,
+                    showings: []
+                });
+            }
         
-        // 2. 為了更完整的資訊，建議使用 db.query 進行 JOIN 查詢
-        // 這裡暫時只回傳 showing 表的結果。
-        
-        if (showings.length === 0) {
-            return res.status(404).json({ 
-                success: true, // 雖然找不到場次，但查詢本身成功
-                message: `找不到電影 ID: ${movieID} 的任何場次`,
-                showings: []
+        } else {
+            // 情況二：僅篩選電影 ID (不需要 JOIN，返回所有影城的場次)
+            // 由於只返回 showing 表的欄位，可以直接使用 db.findAll
+            showings = await db.findAll('showing', {
+                movieID: movieID,
             });
+
+            if (showings.length === 0) {
+                return res.status(404).json({ 
+                    success: true, 
+                    message: `找不到電影 ID: ${movieID} 的任何場次`,
+                    showings: []
+                });
+            }
         }
 
+        // 返回結果
         res.json({ 
             success: true, 
             movieID: movieID,
+            cinemaID: cinemaID || '全部影城',
             count: showings.length,
             showings: showings 
         });
@@ -202,5 +231,4 @@ router.get('/:id/showings', async (req, res) => {
         });
     }
 });
-
 module.exports = router;
