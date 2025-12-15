@@ -125,4 +125,52 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// ----------------------------------------------------
+// API: 查詢影城所有影廳 (GET /api/cinemas/:id/theaters)
+// ----------------------------------------------------
+router.get('/:id/theaters', async (req, res) => {
+    try {
+        const cinemaID = req.params.id; // 取得 URL 參數中的影城 ID
+
+        if (!cinemaID) {
+            return res.status(400).json({ 
+                success: false, 
+                error: '請提供有效的影城 ID' 
+            });
+        }
+
+        const db = req.app.locals.db;
+        
+        // 1. 查詢所有屬於該 cinemaID 的影廳
+        // 假設您的 theater 表中有 cinemaID 欄位作為外來鍵
+        const theaters = await db.findAll('theater', {
+            cinemaID: cinemaID
+        });
+        
+        if (theaters.length === 0) {
+            // 如果查詢成功但沒有結果
+            return res.status(404).json({ 
+                success: true, 
+                message: `找不到影城 ID: ${cinemaID} 的任何影廳`,
+                theaters: []
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            cinemaID: cinemaID,
+            count: theaters.length,
+            theaters: theaters 
+        });
+
+    } catch (error) {
+        console.error('查詢影城影廳失敗:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: '伺服器內部錯誤，無法查詢影廳', 
+            details: error.message 
+        });
+    }
+});
+
 module.exports = router;
