@@ -52,7 +52,7 @@ export default function SeatSelectPage() {
   return (
     <Box sx={{ maxWidth: 1100, mx: "auto", mt: 4 }}>
       <Typography variant="h5" fontWeight="bold">
-        選座位 - {showing?.movieName} ({showing?.showingTime})
+        選取座位 - {showing?.movieName} ({showing?.showingTime})
       </Typography>
 
       <Box mt={2}>

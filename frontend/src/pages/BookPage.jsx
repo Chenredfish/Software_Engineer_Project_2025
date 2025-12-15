@@ -121,7 +121,7 @@ export default function BookPage() {
           disabled={!selectedSession}
           onClick={handleBooking}
         >
-          前往選座位
+          前往選取座位
         </Button>
       </Box>
     </Box>
