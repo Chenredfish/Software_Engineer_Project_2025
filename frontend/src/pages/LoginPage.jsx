@@ -95,7 +95,25 @@ export default function LoginPage() {
           >
             {item.label}
           </Typography>
+
         ))}
+        {/* ⭐ 新增的分隔線 */}
+        <Typography sx={{ fontSize: 14 }}>|</Typography>
+
+        {/* ⭐ 管理員登入（就在登入/註冊會員右邊） */}
+        <Typography
+          component={RouterLink}
+          to="/admin/login"
+          sx={{
+            fontSize: 14,
+            color: "#000",
+            textDecoration: "none",
+            cursor: "pointer",
+            "&:hover": { textDecoration: "underline" }
+          }}
+        >
+          管理員登入
+        </Typography>
       </Box>
 
       {/* 中間置中框框 */}
@@ -156,7 +174,7 @@ export default function LoginPage() {
                 sx={{ fontSize: 12, color: "#000" }}
                 onClick={() => {
                   // 你之後要接忘記密碼流程（L7-L15）可從這裡開始
-                  alert("忘記密碼流程尚未接上（可先做畫面/假流程）");
+                  navigate("/forgot-password");
                 }}
               >
                 忘記密碼

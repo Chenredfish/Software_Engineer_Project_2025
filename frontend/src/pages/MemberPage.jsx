@@ -152,7 +152,7 @@ export default function MemberPage() {
             fullWidth
             variant="outlined"
             sx={{ mt: 2 }}
-            onClick={() => alert("儲值功能尚未接入")}
+            onClick={() => navigate("/topup")}
           >
             我要儲值
           </Button>

@@ -8,6 +8,11 @@ import CinemaDetailPage from "./pages/CinemaDetailPage";
 import BookPage from "./pages/BookPage";
 import MemberPage from "./pages/MemberPage";
 import MoviesPage from "./pages/MoviesPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import MovieDetailPage from "./pages/MovieDetailPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
+import TopUpPage from "./pages/TopUpPage";
 
 function App() {
   return (
@@ -22,6 +27,11 @@ function App() {
         <Route path="/movies" element={<MoviesPage/>} />
         <Route path="/book" element={<BookPage />} />
         <Route path="/member" element={<MemberPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/movies/:movieID" element={<MovieDetailPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/topup" element={<TopUpPage />} />
 
 
         {/* 以下都先未接入 */}

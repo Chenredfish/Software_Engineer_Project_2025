@@ -25,15 +25,15 @@ DROP TABLE IF EXISTS `showing`;
 CREATE TABLE `showing` (
   `showingID` char(6) NOT NULL,
   `movieID` char(6) NOT NULL,
-  `theaterID` char(6) NOT NULL,
+  `cinemaID` char(6) NOT NULL,
   `versionID` char(6) NOT NULL,
   `showingTime` datetime NOT NULL,
   PRIMARY KEY (`showingID`),
   KEY `fk_showing_movie` (`movieID`),
-  KEY `fk_showing_theater` (`theaterID`),
+  KEY `fk_showing_cinema` (`cinemaID`),
   KEY `fk_showing_version` (`versionID`),
   CONSTRAINT `fk_showing_movie` FOREIGN KEY (`movieID`) REFERENCES `movie` (`movieID`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `fk_showing_theater` FOREIGN KEY (`theaterID`) REFERENCES `theater` (`theaterID`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_showing_cinema` FOREIGN KEY (`cinemaID`) REFERENCES `cinema` (`cinemaID`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_showing_version` FOREIGN KEY (`versionID`) REFERENCES `version` (`versionID`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -44,7 +44,7 @@ CREATE TABLE `showing` (
 
 LOCK TABLES `showing` WRITE;
 /*!40000 ALTER TABLE `showing` DISABLE KEYS */;
-INSERT INTO `showing` VALUES ('S00001','D00001','H00001','V00001','2025-12-05 14:30:00'),('S00002','D00002','H00002','V00003','2025-12-05 18:00:00'),('S00003','D00003','H00003','V00005','2025-12-06 10:00:00'),('S00004','D00004','H00004','V00002','2025-12-06 20:30:00'),('S00005','D00001','H00005','V00004','2025-12-07 16:45:00');
+INSERT INTO `showing` VALUES ('S00001','D00001','C00001','V00001','2025-12-05 14:30:00'),('S00002','D00002','C00002','V00003','2025-12-05 18:00:00'),('S00003','D00003','C00003','V00005','2025-12-06 10:00:00'),('S00004','D00004','C00004','V00002','2025-12-06 20:30:00'),('S00005','D00001','C00005','V00004','2025-12-07 16:45:00');
 /*!40000 ALTER TABLE `showing` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

@@ -159,9 +159,11 @@ router.post('/:id/topup', requireAuth, async (req, res) => {
     }
     
     // 更新餘額
-    await db.update('member', { memberID: req.params.id }, { 
-      memberBalance: newBalance 
-    });
+    await db.update(
+  'member',
+  { memberBalance: newBalance },
+  { memberID: req.params.id }
+);
     
     res.json({ 
       success: true,
