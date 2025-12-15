@@ -331,63 +331,73 @@ router.post('/check-account', async (req, res) => {
 // ----------------------------------------------------
 // API 1: 請求重設密碼 (POST /api/auth/forgot-password)
 // ----------------------------------------------------
+// 輔助函數：生成五位數數字驗證碼
+function generateVerificationCode() {
+    // 生成 10000 到 99999 之間的隨機數
+    return Math.floor(10000 + Math.random() * 90000).toString();
+}
+
 // ----------------------------------------------------
-// API 1: 請求重設密碼 (POST /api/auth/forgot-password)
+// API 1: 忘記密碼 (POST /api/auth/forgot-password)
 // ----------------------------------------------------
 router.post('/forgot-password', async (req, res) => {
     try {
         const { account } = req.body; 
         if (!account) {
-             return res.status(400).json({ success: false, error: '請提供會員帳號/郵箱' });
+            return res.status(400).json({ success: false, error: '請提供會員帳號/郵箱' });
         }
 
         const db = req.app.locals.db;
         const members = await db.findAll('member', { memberAccount: account });
 
         if (members.length === 0) {
-          // 1. 安全回應
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return res.json({ success: true, message: '若帳號存在，重設密碼連結已發送到您的郵箱' });
+            // 1. 安全回應 (與原程式碼相同)
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return res.json({ success: true, message: '若帳號存在，驗證碼已發送到您的郵箱' });
         }
 
         const member = members[0];
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        const tokenExpires = Date.now() + (60 * 60 * 1000); // 1 小時後過期
+        
+        // 🚀 核心變動 1: 生成五位數驗證碼
+        const verificationCode = generateVerificationCode(); 
+        const tokenExpires = Date.now() + (10 * 60 * 1000); // 驗證碼改為 10 分鐘後過期
 
-        // 1. 儲存 Token 到獨立資料表
+        // 🚀 核心變動 2: 儲存驗證碼 (Token)
+        // 刪除該帳號所有舊的驗證碼，確保只有最新的有效 (可選，但推薦)
+        await db.delete('password_reset_tokens', { memberAccount: member.memberAccount }); 
+        
         await db.insert('password_reset_tokens', {
-            token: resetToken,
+            // 將欄位 token 儲存為驗證碼
+            token: verificationCode, 
             memberAccount: member.memberAccount,
             expires: tokenExpires
         });
 
-        // 2. 構建郵件內容
-        // 🚨 替換 YOUR_FRONTEND_URL (假設是 http://localhost:8080)
-        const resetLink = `http://localhost:8080/reset-password?token=${resetToken}`; 
-        
+        // 3. 構建郵件內容
         const emailContent = `
             <h2>密碼重設請求</h2>
-            <p>請點擊以下連結重設您的密碼。此連結將於 1 小時後失效：</p>
-            <p><a href="${resetLink}">重設密碼連結</a></p>
+            <p>您的密碼重設驗證碼是：</p>
+            <h1 style="color: #d9534f;">${verificationCode}</h1>
+            <p>請將此驗證碼輸入到網頁，此驗證碼將於 10 分鐘後失效。</p>
         `;
 
-        // 3. 發送郵件
+        // 4. 發送郵件
         const mailSent = await sendEmail(
             member.memberAccount, 
-            '電影訂票系統 - 密碼重設通知',
+            '電影訂票系統 - 密碼重設驗證碼',
             emailContent
         );
 
         res.json({ 
             success: true, 
             message: mailSent 
-                ? '重設密碼連結已發送到您的郵箱，請檢查收件箱。' 
-                : 'Token 已生成，但郵件發送失敗，請聯繫客服。' ,
-            resetToken: resetToken
+                ? '驗證碼已發送到您的郵箱，請檢查收件箱。' 
+                : '驗證碼已生成，但郵件發送失敗，請聯繫客服。'
+            // 🚨 注意：不再回傳 verificationCode 給前端，只用於測試
         });
 
     } catch (error) {
-        res.status(500).json({ success: false, error: '請求重設密碼失敗', details: error.message });
+        res.status(500).json({ success: false, error: '請求驗證碼失敗', details: error.message });
     }
 });
 
@@ -400,40 +410,50 @@ router.post('/forgot-password', async (req, res) => {
 // ----------------------------------------------------
 router.put('/password-reset', async (req, res) => {
     try {
-        const { resetToken, newPassword } = req.body;
+        // 🚀 核心變動 3: 接收驗證碼、新密碼和確認密碼
+        const { account, verificationCode, newPassword, confirmPassword } = req.body;
         
-        if (!resetToken || !newPassword) {
-             return res.status(400).json({ success: false, error: '請提供權杖和新密碼' });
+        if (!account || !verificationCode || !newPassword || !confirmPassword) {
+            return res.status(400).json({ success: false, error: '請提供帳號、驗證碼、新密碼及確認密碼' });
+        }
+
+        // 🚀 核心變動 4: 檢查兩次密碼是否一致
+        if (newPassword !== confirmPassword) {
+             return res.status(400).json({ success: false, error: '兩次輸入的新密碼不一致' });
         }
 
         const db = req.app.locals.db;
         
-        // 1. 從獨立資料表查詢權杖
-        const tokens = await db.findAll('password_reset_tokens', { token: resetToken });
+        // 1. 查詢該帳號的驗證碼
+        const tokens = await db.findAll('password_reset_tokens', { 
+            memberAccount: account, 
+            token: verificationCode // 查詢時同時匹配帳號和驗證碼
+        });
         
         if (tokens.length === 0) {
-            return res.status(400).json({ success: false, error: '無效或已使用的重設密碼權杖' });
+            return res.status(400).json({ success: false, error: '驗證碼錯誤或無效' });
         }
 
         const tokenRecord = tokens[0];
         
         // 2. 檢查權杖是否過期
         if (tokenRecord.expires < Date.now()) {
-            await db.delete('password_reset_tokens', { token: resetToken });
-            return res.status(400).json({ success: false, error: '重設密碼權杖已過期，請重新發起請求' });
+            await db.delete('password_reset_tokens', { token: verificationCode });
+            return res.status(400).json({ success: false, error: '驗證碼已過期，請重新發起請求' });
         }
         
-        // 3. 執行密碼更新 (查詢會員ID)
-        const memberAccountToUpdate = tokenRecord.memberAccount;
+        // 3. 執行密碼更新
+        // 🚀 核心變動 5: 執行密碼雜湊 (如果您的密碼應該被雜湊)
+        // const hashedPassword = await bcrypt.hash(newPassword, 10); // 假設您使用 bcrypt
+        const hashedPassword = newPassword; // 暫時使用原始密碼，請務必加入雜湊！
         
-        // 🚨 注意：這裡假設 memberAccount 是唯一的，直接用它來更新密碼
         await db.update('member', 
-            { memberPwd: newPassword }, 
-            { memberAccount: memberAccountToUpdate }
+            { memberPwd: hashedPassword }, 
+            { memberAccount: account } // 使用帳號來更新
         );
         
-        // 4. 清除已使用的權杖 (重要：防止二次使用)
-        await db.delete('password_reset_tokens', { token: resetToken });
+        // 4. 清除已使用的權杖 (重要)
+        await db.delete('password_reset_tokens', { token: verificationCode });
 
         res.json({ success: true, message: '密碼重設成功，請使用新密碼登入' });
     } catch (error) {
