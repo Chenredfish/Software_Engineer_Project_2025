@@ -6,7 +6,7 @@
     npm -v
     有版本號就可以進行下一步
 ## 第二步:啟動後端
-- cd Software_Engineer_Project_2025/backend
+- cd Software_Engineer_Project_2025/backend  //依據你Backend資料夾所在地進行調整
 - npm install
 - npm run dev
 

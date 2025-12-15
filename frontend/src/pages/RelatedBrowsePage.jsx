@@ -1,30 +1,80 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Button } from "@mui/material";
+import axios from "axios";
 
 export default function RelatedBrowsePage() {
   const navigate = useNavigate();
+  const sessionToken = localStorage.getItem("sessionToken");
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "http://localhost:3000/api/auth/logout",
+        {},
+        {
+          headers: {
+            Authorization: sessionToken
+          }
+        }
+      );
+    } catch (e) {
+      // 就算失敗也繼續清 session
+    }
+
+    localStorage.removeItem("sessionToken");
+    localStorage.removeItem("memberID");
+    navigate("/login");
+  };
 
   return (
     <Box>
       {/* 上方導覽列 */}
       <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 3,
-          py: 2,
-          borderBottom: "2px solid #000"
-        }}
-      >
-        <NavItem text="影城介紹" onClick={() => navigate("/cinemas")} />
-        <NavItem text="活動介紹" onClick={() => navigate("/activities")} />
-        <NavItem text="電影介紹" onClick={() => navigate("/movies")} />
-        <NavItem text="餐飲介紹" onClick={() => navigate("/meals")} />
-        <NavItem text="訂票系統" onClick={() => navigate("/booking")} />
-        <NavItem text="快搜系統" onClick={() => navigate("/quick-search")} />
+  sx={{
+    position: "relative",
+    borderBottom: "2px solid #000",
+    py: 2
+  }}
+>
+  {/* 中間導覽列（完全保持原樣） */}
+  <Box
+    sx={{
+      display: "flex",
+      justifyContent: "center",
+      gap: 3
+    }}
+  >
+    <NavItem text="影城介紹" onClick={() => navigate("/cinemas")} />
+    <NavItem text="活動介紹" onClick={() => navigate("/activities")} />
+    <NavItem text="電影介紹" onClick={() => navigate("/movies")} />
+    <NavItem text="餐飲介紹" onClick={() => navigate("/meals")} />
+    <NavItem text="訂票系統" onClick={() => navigate("/booking")} />
+    <NavItem text="快搜系統" onClick={() => navigate("/quick-search")} />
+  </Box>
+
+  {/* 右上角會員區（獨立定位，不影響中間） */}
+  <Box
+    sx={{
+      position: "absolute",
+      right: 24,
+      top: "50%",
+      transform: "translateY(-50%)",
+      display: "flex",
+      gap: 1
+    }}
+  >
+    {sessionToken ? (
+      <>
         <NavItem text="會員資料" onClick={() => navigate("/member")} />
-      </Box>
+        <Typography>|</Typography>
+        <NavItem text="登出會員" onClick={handleLogout} />
+      </>
+    ) : (
+      <NavItem text="登入 / 註冊會員" onClick={() => navigate("/login")} />
+    )}
+  </Box>
+</Box>
 
       {/* 主內容 */}
       <Box sx={{ display: "flex", justifyContent: "center", mt: 5, gap: 6 }}>
@@ -80,7 +130,7 @@ export default function RelatedBrowsePage() {
 function NavItem({ text, onClick }) {
   return (
     <Typography
-      sx={{ fontSize: 14, cursor: "pointer" }}
+      sx={{ fontSize: 14, cursor: "pointer", display: "inline" }}
       onClick={onClick}
     >
       {text}
