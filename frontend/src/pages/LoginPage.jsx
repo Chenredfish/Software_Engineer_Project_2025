@@ -156,7 +156,7 @@ export default function LoginPage() {
                 sx={{ fontSize: 12, color: "#000" }}
                 onClick={() => {
                   // 你之後要接忘記密碼流程（L7-L15）可從這裡開始
-                  alert("忘記密碼流程尚未接上（可先做畫面/假流程）");
+                  navigate("/forgot-password");
                 }}
               >
                 忘記密碼

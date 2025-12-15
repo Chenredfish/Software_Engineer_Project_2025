@@ -8,6 +8,8 @@ import CinemaDetailPage from "./pages/CinemaDetailPage";
 import BookPage from "./pages/BookPage";
 import MemberPage from "./pages/MemberPage";
 import MoviesPage from "./pages/MoviesPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
         <Route path="/movies" element={<MoviesPage/>} />
         <Route path="/book" element={<BookPage />} />
         <Route path="/member" element={<MemberPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
 
         {/* 以下都先未接入 */}
