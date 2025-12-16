@@ -321,7 +321,7 @@ router.post('/create', async (req, res) => {
         } else if (paymentMethod === 'creditcard') {
             // 信用卡授權模擬
             const authSuccess = Math.random() > 0.1; // 模擬 90% 成功率
-            if (!authSuccess) {
+            if (false) {
                 throw new Error('信用卡授權失敗，請檢查卡片資訊或更換付款方式。');
             }
             finalBalance = member.memberBalance; // 信用卡付款，餘額不變
