@@ -246,32 +246,59 @@ function generateOrderID() {
 // ----------------------------------------------------
 // API: 完整訂票流程 (POST /api/bookings/create)
 // ----------------------------------------------------
+/**
+ * 模擬生成唯一的票券 ID (ticketID)
+ */
+function generateTicketID() {
+    return 'T' + Date.now().toString().slice(-10) + Math.floor(Math.random() * 100);
+}
+
+// 假設 '無餐點' 或預設餐點的 ID
+const DEFAULT_MEALS_ID = 'M00001'; 
+
+// ----------------------------------------------------
+// API: 完整訂票流程 (POST /api/bookings/create)
+// ----------------------------------------------------
 router.post('/create', async (req, res) => {
     const db = req.app.locals.db;
-    const { memberID, showingID, seatNumbers, ticketTypeID, unitPrice } = req.body;
+    const { 
+        memberID, showingID, seatNumbers, ticketTypeID, unitPrice, 
+        paymentMethod, cardNumber, securityCode, expirationDate 
+    } = req.body;
 
-    if (!memberID || !showingID || !seatNumbers || seatNumbers.length === 0 || !ticketTypeID || !unitPrice) {
-        return res.status(400).json({ success: false, error: '請提供完整的訂票資訊' });
+    // --- 1. 基礎參數與付款方式檢查 ---
+    if (!memberID || !showingID || !seatNumbers || seatNumbers.length === 0 || !ticketTypeID || !unitPrice || !paymentMethod) {
+        return res.status(400).json({ success: false, error: '請提供完整的訂票資訊及付款方式' });
+    }
+    
+    // 付款方式特有檢查
+    if (paymentMethod === 'creditcard') {
+        if (!cardNumber || !securityCode || !expirationDate) {
+            return res.status(400).json({ success: false, error: '選擇信用卡付款，請提供完整的卡號、安全碼及到期日' });
+        }
+    } else if (paymentMethod !== 'balance') {
+        return res.status(400).json({ success: false, error: '付款方式錯誤，請選擇 balance 或 creditcard' });
     }
 
     const totalAmount = unitPrice * seatNumbers.length;
     let orderID = null;
+    const orderDate = new Date().toISOString(); // 用於 bookingTime 欄位
+    let seatDetails = []; // 儲存 { seatNumber, seatID }
 
     try {
-        // 1. 交易開始
+        // 2. 交易開始 
         await db.beginTransaction();
         
-        // --- 2. 檢查座位狀態 (原子性操作) ---
+        // --- 3. 檢查座位狀態 & 取得 seatID (原子性操作) ---
         const placeholders = seatNumbers.map(() => '?').join(',');
         const seatCheckQuery = `
-            SELECT seatNumber, seatState 
+            SELECT seatNumber, seatState, seatID 
             FROM seat 
             WHERE showingID = ? AND seatNumber IN (${placeholders})
         `;
         const seats = await db.query(seatCheckQuery, [showingID, ...seatNumbers]);
 
         if (seats.length !== seatNumbers.length) {
-            // 請求的座位數量和找到的座位數量不符
             throw new Error('請求的座位號碼部分或全部不存在。');
         }
 
@@ -280,66 +307,70 @@ router.post('/create', async (req, res) => {
             throw new Error(`座位已被預訂或鎖定: ${unavailableSeats.map(s => s.seatNumber).join(', ')}`);
         }
         
-        // --- 3. & 4. 檢查餘額並扣款 (原子性操作) ---
+        seatDetails = seats.map(s => ({ seatNumber: s.seatNumber, seatID: s.seatID }));
+
+        // --- 4. 檢查餘額/執行扣款或授權 ---
+        let finalBalance = null;
         const [member] = await db.findAll('member', { memberID: memberID });
         if (!member) {
             throw new Error('會員 ID 不存在。');
         }
 
-        if (member.memberBalance < totalAmount) {
-            throw new Error(`餘額不足。所需金額: ${totalAmount}, 當前餘額: ${member.memberBalance}`);
+        if (paymentMethod === 'balance') {
+            // 餘額扣款邏輯
+            if (member.memberBalance < totalAmount) {
+                throw new Error(`餘額不足。所需金額: ${totalAmount}, 當前餘額: ${member.memberBalance}`);
+            }
+            finalBalance = member.memberBalance - totalAmount;
+            await db.update('member', { memberBalance: finalBalance }, { memberID: memberID });
+            
+        } else if (paymentMethod === 'creditcard') {
+            // 信用卡授權模擬
+            const authSuccess = Math.random() > 0.1; 
+            if (!authSuccess) {
+                throw new Error('信用卡授權失敗，請檢查卡片資訊或更換付款方式。');
+            }
+            finalBalance = member.memberBalance; 
         }
-        
-        const newBalance = member.memberBalance - totalAmount;
-        
-        // 執行扣款
-        await db.update('member', 
-            { memberBalance: newBalance }, 
-            { memberID: memberID }
-        );
 
-        // --- 5. 建立訂單主記錄 (orderrecord) ---
-        orderID = generateOrderID();
-        // 假設訂單狀態 S00001 = 交易成功
-        await db.insert('orderrecord', {
+        // --- 5. 建立訂票子記錄 (bookingrecord) & 6. 更新座位狀態 ---
+        orderID = generateOrderID(); // 生成本次交易的唯一 ID
+
+        const bookingRecords = seatDetails.map((detail) => ({
             orderID: orderID,
-            memberID: memberID,
-            orderDate: new Date().toISOString(),
+            memberID: memberID, 
+            showingID: showingID,
+            seatID: detail.seatID,       // 寫入查詢到的 seatID
+            ticketID: generateTicketID(), // 生成每張票券的唯一 ID
+            mealsID: DEFAULT_MEALS_ID,    // 預設餐點 ID
+            ticketTypeID: ticketTypeID,
             orderStateID: 'S00001', 
-            orderAmount: totalAmount
-        });
+            bookingTime: orderDate,      // 寫入訂單時間
+            // 由於您的 bookingrecord 結構沒有 orderAmount 和 ticketPrice，
+            // 這裡不寫入，但您可以在後端日誌中記錄。
+        }));
         
-        // --- 6. 建立訂票子記錄 (bookingrecord) & 7. 更新座位狀態 ---
+        // 批量插入 bookingrecord
+        for (const record of bookingRecords) {
+            await db.insert('bookingrecord', record); 
+        }
+
+        // 更新座位狀態 (將座位設為已預訂: 1)
         const seatUpdateQuery = `
             UPDATE seat SET seatState = 1 WHERE showingID = ? AND seatNumber IN (${placeholders})
         `;
         await db.query(seatUpdateQuery, [showingID, ...seatNumbers]);
 
-        const bookingRecords = seatNumbers.map(seatNumber => ({
-            orderID: orderID,
-            showingID: showingID,
-            seatNumber: seatNumber,
-            ticketTypeID: ticketTypeID,
-            ticketPrice: unitPrice,
-            orderStateID: 'S00001' 
-        }));
-        
-        // 由於 db.insert 不支援批次插入，您需要自行迭代或使用自定義的批次插入方法
-        // 這裡我們假設 db.insert 可以接受單一物件，所以我們需要迴圈插入
-        for (const record of bookingRecords) {
-            await db.insert('bookingrecord', record);
-        }
-
-        // 8. 交易提交
+        // 7. 交易提交
         await db.commit();
 
         res.status(201).json({ 
             success: true, 
-            message: '訂票成功，已完成扣款與訂單建立',
+            message: `訂票成功，已透過 ${paymentMethod === 'balance' ? '會員餘額' : '信用卡'} 完成付款與訂單建立`,
             orderID: orderID,
             reservedSeats: seatNumbers,
             totalAmount: totalAmount,
-            newBalance: newBalance
+            newBalance: finalBalance
         });
 
     } catch (error) {
