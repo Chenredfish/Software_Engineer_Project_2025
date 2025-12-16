@@ -336,6 +336,70 @@ router.post('/reserve', async (req, res) => {
     }
 });
 
+// ----------------------------------------------------
+// API: 透過電影 ID 和影廳 ID 查詢場次
+// GET /api/showings?movieID=D00001&theaterID=T00001
+// ----------------------------------------------------
+router.get('/:movieID/:theaterID', async (req, res) => {
+    try {
+        // 從 URL 路徑參數中取得篩選條件
+        const movieID = req.params.movieID;
+        const theaterID = req.params.theaterID; 
+
+        if (!movieID || !theaterID) {
+            // 理論上 path 參數一定會存在，但做個防護
+            return res.status(400).json({ 
+                success: false, 
+                error: '請在路徑中提供有效的電影 ID 和影廳 ID' 
+            });
+        }
+
+        const db = req.app.locals.db;
+        
+        // 聯表查詢 (JOIN) 獲取 showing, movieName, 和 theaterName
+        const query = `
+            SELECT 
+                S.*, 
+                M.movieName,    
+                T.theaterName   
+            FROM showing S
+            JOIN movie M ON S.movieID = M.movieID
+            JOIN theater T ON S.theaterID = T.theaterID
+            WHERE S.movieID = ? AND S.theaterID = ?
+            ORDER BY S.showingTime ASC
+        `;
+        
+        const detailedShowings = await db.query(query, [movieID, theaterID]);
+
+        if (detailedShowings.length === 0) {
+            return res.status(404).json({ 
+                success: true, // 查詢本身成功，但無資料
+                message: `找不到電影 ID: ${movieID} 在影廳 ID: ${theaterID} 的任何場次`,
+                showings: []
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            movieID: movieID,
+            theaterID: theaterID,
+            count: detailedShowings.length,
+            showings: detailedShowings 
+        });
+
+    } catch (error) {
+        // 確保將錯誤訊息輸出到伺服器端 Log，並返回給客戶端
+        console.error('查詢特定影廳場次失敗:', error); 
+        res.status(500).json({ 
+            success: false, 
+            error: '伺服器內部錯誤，無法查詢場次', 
+            details: error.message 
+        });
+    }
+});
+
+module.exports = router;
+
 // module.exports = router; // 記得匯出路由
 
 module.exports = router;
