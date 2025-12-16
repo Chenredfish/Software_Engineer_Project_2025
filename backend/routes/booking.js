@@ -19,7 +19,7 @@ router.get('/search', async (req, res) => {
                 availableFields: [
                     'orderID', 'memberID', 'showingID', 
                     'ticketID', 'orderStateID', 'mealsID', 
-                    'ticketTypeID', 'bookingTime', 'seatID'
+                    'ticketTypeID', 'bookingTime', 'seatNumber'
                 ]
             });
         }
@@ -78,11 +78,11 @@ router.post('/', requireAuth, async (req, res) => {
       orderStateID, 
       mealsID, 
       ticketTypeID, 
-      seatID 
+      seatNumber 
     } = req.body;
     
     // 輸入驗證
-    if (!showingID || !ticketID || !orderStateID || !ticketTypeID || !seatID) {
+    if (!showingID || !ticketID || !orderStateID || !ticketTypeID || !seatNumber) {
       return res.status(400).json({ 
         success: false,
         error: '請填寫完整訂票資訊' 
@@ -90,7 +90,7 @@ router.post('/', requireAuth, async (req, res) => {
     }
     
     // ID 長度驗證 (所有 ID 都是 6 字元)
-    const ids = { showingID, ticketID, orderStateID, ticketTypeID, seatID };
+    const ids = { showingID, ticketID, orderStateID, ticketTypeID, seatNumber };
     if (mealsID) ids.mealsID = mealsID;
     
     for (const [key, value] of Object.entries(ids)) {
@@ -118,7 +118,7 @@ router.post('/', requireAuth, async (req, res) => {
       mealsID: mealsID || null,
       ticketTypeID,
       bookingTime: new Date().toISOString().split('T')[0], // YYYY-MM-DD
-      seatID
+      seatNumber
     };
     
     await db.insert('bookingrecord', newBooking);
@@ -243,18 +243,16 @@ function generateOrderID() {
     return 'B' + Date.now().toString().slice(-8) + Math.random().toString(36).substring(2, 6).toUpperCase();
 }
 
-// ----------------------------------------------------
-// API: 完整訂票流程 (POST /api/bookings/create)
-// ----------------------------------------------------
-/**
- * 模擬生成唯一的票券 ID (ticketID)
- */
-function generateTicketID() {
-    return 'T' + Date.now().toString().slice(-10) + Math.floor(Math.random() * 100);
+// 輔助函數 (請確保在您的專案中這些函數可以被正確使用)
+function generateOrderID() {
+    return 'O' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 100);
 }
 
-// 假設 '無餐點' 或預設餐點的 ID
-const DEFAULT_MEALS_ID = 'M00001'; 
+function generateTicketID() {
+    return 'T' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 100);
+}
+
+const DEFAULT_MEALS_ID = null; // 假設無餐點的預設值
 
 // ----------------------------------------------------
 // API: 完整訂票流程 (POST /api/bookings/create)
@@ -277,22 +275,20 @@ router.post('/create', async (req, res) => {
             return res.status(400).json({ success: false, error: '選擇信用卡付款，請提供完整的卡號、安全碼及到期日' });
         }
     } else if (paymentMethod !== 'balance') {
-        return res.status(400).json({ success: false, error: '付款方式錯誤，請選擇 balance 或 creditcard' });
+        return res.status(400).json({ success: false, error: '付款方式錯誤，請選擇 balance (儲值卡) 或 creditcard (信用卡)' });
     }
 
     const totalAmount = unitPrice * seatNumbers.length;
     let orderID = null;
-    const orderDate = new Date().toISOString(); // 用於 bookingTime 欄位
-    let seatDetails = []; // 儲存 { seatNumber, seatID }
+    const bookingTime = new Date().toISOString(); // 用於 bookingTime 欄位
 
     try {
-        // 2. 交易開始 
         await db.beginTransaction();
         
-        // --- 3. 檢查座位狀態 & 取得 seatID (原子性操作) ---
+        // --- 2. 檢查座位狀態 ---
         const placeholders = seatNumbers.map(() => '?').join(',');
         const seatCheckQuery = `
-            SELECT seatNumber, seatState, seatID 
+            SELECT seatNumber, seatState 
             FROM seat 
             WHERE showingID = ? AND seatNumber IN (${placeholders})
         `;
@@ -307,9 +303,7 @@ router.post('/create', async (req, res) => {
             throw new Error(`座位已被預訂或鎖定: ${unavailableSeats.map(s => s.seatNumber).join(', ')}`);
         }
         
-        seatDetails = seats.map(s => ({ seatNumber: s.seatNumber, seatID: s.seatID }));
-
-        // --- 4. 檢查餘額/執行扣款或授權 ---
+        // --- 3. 檢查餘額/執行扣款或授權 ---
         let finalBalance = null;
         const [member] = await db.findAll('member', { memberID: memberID });
         if (!member) {
@@ -317,7 +311,7 @@ router.post('/create', async (req, res) => {
         }
 
         if (paymentMethod === 'balance') {
-            // 餘額扣款邏輯
+            // 餘額扣款邏輯 (儲值卡)
             if (member.memberBalance < totalAmount) {
                 throw new Error(`餘額不足。所需金額: ${totalAmount}, 當前餘額: ${member.memberBalance}`);
             }
@@ -326,28 +320,27 @@ router.post('/create', async (req, res) => {
             
         } else if (paymentMethod === 'creditcard') {
             // 信用卡授權模擬
-            const authSuccess = Math.random() > 0.1; 
+            const authSuccess = Math.random() > 0.1; // 模擬 90% 成功率
             if (!authSuccess) {
                 throw new Error('信用卡授權失敗，請檢查卡片資訊或更換付款方式。');
             }
-            finalBalance = member.memberBalance; 
+            finalBalance = member.memberBalance; // 信用卡付款，餘額不變
         }
 
-        // --- 5. 建立訂票子記錄 (bookingrecord) & 6. 更新座位狀態 ---
+        // --- 4. 建立訂票記錄 (bookingrecord) & 5. 更新座位狀態 ---
         orderID = generateOrderID(); // 生成本次交易的唯一 ID
 
-        const bookingRecords = seatDetails.map((detail) => ({
+        const bookingRecords = seatNumbers.map((seatNumber) => ({
             orderID: orderID,
+            ticketID: generateTicketID(), // 生成每張票券的唯一 ID
             memberID: memberID, 
             showingID: showingID,
-            seatID: detail.seatID,       // 寫入查詢到的 seatID
-            ticketID: generateTicketID(), // 生成每張票券的唯一 ID
-            mealsID: DEFAULT_MEALS_ID,    // 預設餐點 ID
+            orderStateID: 'S00001',       // 假設 S00001 = 訂單成立
+            mealsID: DEFAULT_MEALS_ID,    
             ticketTypeID: ticketTypeID,
-            orderStateID: 'S00001', 
-            bookingTime: orderDate,      // 寫入訂單時間
-            // 由於您的 bookingrecord 結構沒有 orderAmount 和 ticketPrice，
-            // 這裡不寫入，但您可以在後端日誌中記錄。
+            bookingTime: bookingTime,     // 寫入訂單時間
+            seatNumber: seatNumber,       // 寫入座位號碼 (符合您的 DB 結構)
+            paymentMethod: paymentMethod  // 寫入付款方式 (符合您的 DB 結構)
         }));
         
         // 批量插入 bookingrecord
@@ -361,12 +354,12 @@ router.post('/create', async (req, res) => {
         `;
         await db.query(seatUpdateQuery, [showingID, ...seatNumbers]);
 
-        // 7. 交易提交
+        // 6. 交易提交
         await db.commit();
 
         res.status(201).json({ 
             success: true, 
-            message: `訂票成功，已透過 ${paymentMethod === 'balance' ? '會員餘額' : '信用卡'} 完成付款與訂單建立`,
+            message: `訂票成功，已透過 ${paymentMethod} 完成付款與訂單建立`,
             orderID: orderID,
             reservedSeats: seatNumbers,
             totalAmount: totalAmount,

@@ -170,6 +170,7 @@ class Database {
                 ticketTypeID TEXT NOT NULL,
                 bookingTime DATETIME NOT NULL,
                 seatNumber TEXT NOT NULL,
+                paymentMethod TEXT NOT NULL,
                 PRIMARY KEY (orderID, ticketID),
                 FOREIGN KEY (memberID) REFERENCES member(memberID),
                 FOREIGN KEY (showingID) REFERENCES showing(showingID), -- ⚠️ 已修正外鍵參考
