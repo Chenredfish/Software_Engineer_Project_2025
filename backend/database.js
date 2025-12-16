@@ -169,12 +169,13 @@ class Database {
                 mealsID TEXT,
                 ticketTypeID TEXT NOT NULL,
                 bookingTime DATETIME NOT NULL,
-                seatID TEXT NOT NULL,
+                seatNumber TEXT NOT NULL,
                 PRIMARY KEY (orderID, ticketID),
                 FOREIGN KEY (memberID) REFERENCES member(memberID),
                 FOREIGN KEY (showingID) REFERENCES showing(showingID), -- ⚠️ 已修正外鍵參考
                 FOREIGN KEY (orderStateID) REFERENCES orderstatus(orderStatusID),
                 FOREIGN KEY (mealsID) REFERENCES meals(mealsID),
+                FOREIGN KEY (seatNumber) REFERENCES seat(seatNumber),
                 FOREIGN KEY (ticketTypeID) REFERENCES ticketclass(ticketClassID)
             )`
         ];

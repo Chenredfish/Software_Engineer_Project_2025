@@ -305,18 +305,43 @@ app.post('/api/init-sample-data', async (req, res) => {
             // 新增：seat (座位) 資料
             // 確保 seatID 與 bookingrecord 中引用的 S00001~S00005 匹配
             seat: [
-                { showingID: 'H00001', seatNumber: 'A01', seatState: 1 }, // H00001 場次 A01 已預訂
-                { showingID: 'H00001', seatNumber: 'A02', seatState: 0 },
-                { showingID: 'H00002', seatNumber: 'B01', seatState: 1 }, // H00002 場次 B01 已預訂
-                { showingID: 'H00003', seatNumber: 'C01', seatState: 0 },
-                { showingID: 'H00004', seatNumber: 'D01', seatState: 0 }
+                { showingID: 'H00001', seatNumber: 'A01', seatState: 1 }, // H00001 A01 (已預訂)
+                { showingID: 'H00001', seatNumber: 'A02', seatState: 0 }, // H00001 A02 (可用)
+                { showingID: 'H00001', seatNumber: 'A03', seatState: 0 },
+                { showingID: 'H00002', seatNumber: 'B01', seatState: 1 }, // H00002 B01 (已預訂)
+                { showingID: 'H00002', seatNumber: 'B02', seatState: 0 },
+                { showingID: 'H00003', seatNumber: 'C01', seatState: 0 }, // H00003 C01 (可用)
+                { showingID: 'H00003', seatNumber: 'C02', seatState: 1 },
+                { showingID: 'H00004', seatNumber: 'D01', seatState: 0 }, // H00004 D01 (可用)
+                { showingID: 'H00004', seatNumber: 'D02', seatState: 1 },
+                { showingID: 'H00005', seatNumber: 'E01', seatState: 0 }
             ],
             bookingrecord: [
-                { orderID: 'O00001', memberID: 'A123456789', showingID: 'H00001', ticketID: 'O00001', orderStateID: 'S00001', mealsID: 'M00001', ticketTypeID: 'T00001', bookingTime: '2024-12-10', seatID: 'S00001' },
-                { orderID: 'O00002', memberID: 'B234567890', showingID: 'H00002', ticketID: 'O00002', orderStateID: 'S00003', mealsID: 'M00002', ticketTypeID: 'T00002', bookingTime: '2024-12-11', seatID: 'S00002' },
-                { orderID: 'O00003', memberID: 'C345678901', showingID: 'H00003', ticketID: 'O00003', orderStateID: 'S00001', mealsID: null, ticketTypeID: 'T00003', bookingTime: '2024-12-12', seatID: 'S00003' },
-                { orderID: 'O00004', memberID: 'D456789012', showingID: 'H00004', ticketID: 'O00004', orderStateID: 'S00005', mealsID: 'M00004', ticketTypeID: 'T00001', bookingTime: '2024-12-13', seatID: 'S00004' },
-                { orderID: 'O00005', memberID: 'E567890123', showingID: 'H00005', ticketID: 'O00005', orderStateID: 'S00001', mealsID: 'M00005', ticketTypeID: 'T00004', bookingTime: '2024-12-14', seatID: 'S00005' }
+                { 
+                  orderID: 'O00001', memberID: 'A123456789', showingID: 'H00001', 
+                  ticketID: 'O00001', orderStateID: 'S00001', mealsID: 'M00001', 
+                  ticketTypeID: 'T00001', bookingTime: '2024-12-10 14:30:00', seatNumber: 'A01' // 填入 seat.A01
+                },
+                { 
+                  orderID: 'O00002', memberID: 'B234567890', showingID: 'H00002', 
+                  ticketID: 'O00002', orderStateID: 'S00003', mealsID: 'M00002', 
+                  ticketTypeID: 'T00002', bookingTime: '2024-12-11 10:00:00', seatNumber: 'B01' // 填入 seat.B01
+                },
+                { 
+                  orderID: 'O00003', memberID: 'C345678901', showingID: 'H00003', 
+                  ticketID: 'O00003', orderStateID: 'S00001', mealsID: null, 
+                  ticketTypeID: 'T00003', bookingTime: '2024-12-12 18:00:00', seatNumber: 'C02' // 填入 seat.C02 (已預訂)
+                },
+                { 
+                  orderID: 'O00004', memberID: 'D456789012', showingID: 'H00004', 
+                  ticketID: 'O00004', orderStateID: 'S00005', mealsID: 'M00004', 
+                  ticketTypeID: 'T00001', bookingTime: '2024-12-13 20:45:00', seatNumber: 'D02' // 填入 seat.D02 (已預訂)
+                },
+                { 
+                  orderID: 'O00005', memberID: 'E567890123', showingID: 'H00005', 
+                  ticketID: 'O00005', orderStateID: 'S00001', mealsID: 'M00005', 
+                  ticketTypeID: 'T00004', bookingTime: '2024-12-14 16:15:00', seatNumber: 'E01' // 填入 seat.E01 (可用，假設剛預訂成功)
+                }
             ]
         };
 

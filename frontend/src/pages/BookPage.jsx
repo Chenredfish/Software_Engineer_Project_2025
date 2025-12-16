@@ -81,14 +81,17 @@ export default function BookPage() {
   }, [movieId, theaterId]);
 
   /* ----------- 前往 SeatPage ----------- */
-  const handleBooking = () => {
+  const handleBooking = (selectedSession) => {
     if (!selectedSession) return;
 
-    // 使用 navigate state 傳資料
-    navigate(`/seat/${selectedSession.showingID}`, {
-      state: { showing: selectedSession },
+    navigate("/mealselect", {
+      state: {
+        showing: selectedSession, // 將選中的場次傳過去
+      },
     });
   };
+
+
 
   return (
     <Box sx={{ maxWidth: 1100, mx: "auto", mt: 4 }}>
@@ -119,10 +122,11 @@ export default function BookPage() {
           variant="contained"
           sx={{ mt: 3 }}
           disabled={!selectedSession}
-          onClick={handleBooking}
+          onClick={() => handleBooking(selectedSession)}
         >
-          選取座位
+          選擇餐點
         </Button>
+
       </Box>
     </Box>
   );
