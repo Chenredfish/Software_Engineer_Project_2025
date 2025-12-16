@@ -237,6 +237,104 @@ npm run test
 
 #### GET `/api/admin` - 查詢所有管理員
 #### POST `/api/admin/create` - 建立管理員帳號
+#### POST `/api/admin/logout` - 管理員登出 🔒
+
+### 👨‍💼 管理員專用資料查看 (需要管理員權限)
+
+#### GET `/api/admin/dashboard` - 管理員系統概覽 🔒
+返回所有表格的資料統計和系統狀態
+
+#### GET `/api/admin/members` - 查看所有會員資料 🔒
+**管理員專用**，返回包含密碼的完整會員資料
+
+#### GET `/api/admin/movies` - 查看所有電影資料 🔒
+管理員查看完整電影資料庫
+
+#### GET `/api/admin/cinemas` - 查看所有影城資料 🔒
+管理員查看完整影城資料庫
+
+#### GET `/api/admin/showings` - 查看所有場次資料 🔒
+管理員查看完整場次資料庫
+
+#### GET `/api/admin/bookings` - 查看所有訂票記錄 🔒
+管理員查看完整訂票資料庫
+
+#### GET `/api/admin/meals` - 查看所有餐點資料 🔒
+管理員查看完整餐點資料庫
+
+#### GET `/api/admin/ticketclasses` - 查看所有票種資料 🔒
+管理員查看完整票種資料庫
+
+#### GET `/api/admin/supervisors` - 查看所有管理員資料 🔒
+管理員查看完整管理員資料庫 (含密碼)
+
+#### GET `/api/admin/orderstatus` - 查看所有訂單狀態資料 🔒
+管理員查看完整訂單狀態資料庫
+
+#### GET `/api/admin/versions` - 查看所有電影版本資料 🔒
+管理員查看完整電影版本資料庫
+
+#### GET `/api/admin/rated` - 查看所有電影分級資料 🔒
+管理員查看完整電影分級資料庫
+
+#### GET `/api/admin/theaters` - 查看所有影廳資料 🔒
+管理員查看完整影廳資料庫
+
+#### GET `/api/admin/seats` - 查看所有座位資料 🔒
+管理員查看完整座位資料庫
+
+#### GET `/api/admin/movielist` - 查看所有影城電影列表 🔒
+管理員查看完整影城電影關聯資料
+
+#### GET `/api/admin/password-reset-tokens` - 查看密碼重設權杖 🔒
+**調試用途**，管理員查看所有密碼重設權杖
+
+### 👨‍💼 管理員通用 CRUD 操作 (高權限)
+
+#### POST `/api/admin/create/:table` - 通用新增資料 🔒
+```javascript
+// 在任意表格新增資料
+POST /api/admin/create/member
+{
+  memberID: "F123456789",
+  memberAccount: "new_user",
+  memberPwd: "password123",
+  memberName: "新用戶",
+  memberBirth: "1990-01-01",
+  memberPhone: "0912345678"
+}
+```
+
+#### PUT `/api/admin/update/:table` - 通用修改資料 🔒
+```javascript
+// 修改任意表格的資料
+PUT /api/admin/update/member
+{
+  conditions: { memberID: "F123456789" },
+  data: { memberName: "更新姓名", memberPhone: "0987654321" }
+}
+```
+
+#### DELETE `/api/admin/delete/:table` - 通用刪除資料 🔒
+```javascript
+// 刪除任意表格的資料
+DELETE /api/admin/delete/member
+{
+  memberID: "F123456789"
+}
+```
+
+#### POST `/api/admin/batch` - 批量操作 🔒
+```javascript
+// 批量執行多個操作
+{
+  operations: [
+    { type: "create", table: "member", data: {...} },
+    { type: "update", table: "movie", conditions: {...}, data: {...} },
+    { type: "delete", table: "booking", conditions: {...} }
+  ]
+}
+```
 
 ### 🛠️ 系統工具 (Utilities)
 
@@ -251,6 +349,24 @@ npm run test
 
 #### GET `/api/members/debug/with-passwords` - 測試用會員查詢 ⚠️
 **僅供開發測試使用**，返回包含密碼的完整會員資料
+
+#### 管理員測試工具 📱
+`admin_debug.js` - 專用管理員資料查詢工具
+```bash
+# 顯示所有可用表格
+node admin_debug.js
+
+# 查詢特定表格
+node admin_debug.js members
+node admin_debug.js dashboard
+node admin_debug.js bookings
+
+# 查詢多個表格
+node admin_debug.js members movies cinemas
+
+# 查詢所有表格
+node admin_debug.js --all
+```
 
 ## 快速測試指令
 
@@ -292,6 +408,20 @@ $mealData = @{
   mealsDisp = "這是一個測試用餐點"
 } | ConvertTo-Json
 Invoke-RestMethod -Uri "http://localhost:3000/api/meals" -Method POST -Body $mealData -ContentType "application/json"
+
+# 管理員登入
+$adminLoginData = @{ account = "admin"; password = "admin123" } | ConvertTo-Json
+$adminResponse = Invoke-RestMethod -Uri "http://localhost:3000/api/admin/login" -Method POST -Body $adminLoginData -ContentType "application/json"
+$adminToken = $adminResponse.adminToken
+
+# 管理員查看系統概覽
+Invoke-RestMethod -Uri "http://localhost:3000/api/admin/dashboard" -Headers @{ "Authorization" = $adminToken }
+
+# 管理員查看所有會員 (含密碼)
+Invoke-RestMethod -Uri "http://localhost:3000/api/admin/members" -Headers @{ "Authorization" = $adminToken }
+
+# 管理員查看所有訂票記錄
+Invoke-RestMethod -Uri "http://localhost:3000/api/admin/bookings" -Headers @{ "Authorization" = $adminToken }
 ```
 
 ### JavaScript 使用範例
@@ -352,6 +482,43 @@ const bookingResponse = await fetch('http://localhost:3000/api/bookings', {
 // 查詢電影列表 (不需認證)
 const moviesResponse = await fetch('http://localhost:3000/api/movies');
 const movies = await moviesResponse.json();
+
+// 管理員登入
+const adminLoginResponse = await fetch('http://localhost:3000/api/admin/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    account: 'admin',
+    password: 'admin123'
+  })
+});
+
+const adminLoginData = await adminLoginResponse.json();
+const adminToken = adminLoginData.adminToken;
+
+// 管理員查看系統概覽
+const dashboardResponse = await fetch('http://localhost:3000/api/admin/dashboard', {
+  headers: { 
+    'Authorization': adminToken,
+    'Content-Type': 'application/json'
+  }
+});
+
+// 管理員查看所有會員資料 (含密碼)
+const membersResponse = await fetch('http://localhost:3000/api/admin/members', {
+  headers: { 
+    'Authorization': adminToken,
+    'Content-Type': 'application/json'
+  }
+});
+
+// 管理員查看所有訂票記錄
+const bookingsResponse = await fetch('http://localhost:3000/api/admin/bookings', {
+  headers: { 
+    'Authorization': adminToken,
+    'Content-Type': 'application/json'
+  }
+});
 ```
 
 ## 資料格式規格
