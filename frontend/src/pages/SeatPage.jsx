@@ -183,7 +183,7 @@ export default function SeatPage() {
       {/* 下一步 */}
       <Box mt={4} textAlign="right">
         <Button variant="contained" size="large" onClick={handleNext}>
-          去付款
+          前往付款
         </Button>
       </Box>
     </Box>

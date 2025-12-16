@@ -18,7 +18,7 @@ export default function MealSelectPage() {
   const showing = state?.showing;
 
   if (!showing) {
-    return <Typography>未選擇場次，請返回訂票頁面</Typography>;
+    return <Typography>尚未選擇場次，請返回訂票頁面</Typography>;
   }
 
   const [ticketClasses, setTicketClasses] = useState([]);

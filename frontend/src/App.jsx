@@ -43,7 +43,7 @@ function App() {
         <Route path="/seat" element={<SeatPage />} />
         <Route path="/mealselect" element={<MealSelectPage />} />
         <Route path="/payment" element={<PaymentPage />} />
-        {/* 以下都先未接入 */}
+        {/* 以下都先未接入. */}
         <Route path="/activities" element={<Placeholder title="活動介紹" />} />
         <Route path="/quick-search" element={<Placeholder title="快搜系統" />} />
       </Routes>
