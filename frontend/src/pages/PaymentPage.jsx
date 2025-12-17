@@ -44,9 +44,7 @@ export default function PaymentPage() {
     securityCode: "",
   });
 
-  // =========================
-  // 讀取票種 / 餐點參考資料
-  // =========================
+  // 讀取票種 / 餐點
   useEffect(() => {
     fetch(`${apiBase}/api/ticketclasses`)
       .then((res) => res.json())
@@ -59,21 +57,7 @@ export default function PaymentPage() {
       .catch(() => setMeals([]));
   }, []);
 
-  const toggleSeat = (seatNumber) => {
-    if (selectedSeats.includes(seatNumber)) {
-      setSelectedSeats(selectedSeats.filter((s) => s !== seatNumber));
-    } else {
-      if (selectedSeats.length >= MAX_SEATS) {
-        alert(`最多只能選擇 ${MAX_SEATS} 張座位`);
-        return;
-      }
-      setSelectedSeats([...selectedSeats, seatNumber]);
-    }
-  };
-
-  // =========================
   // 付款
-  // =========================
   const handlePay = async () => {
     if (paymentMethod === "credit") {
       const { cardNumber, expirationDate, securityCode } = cardInfo;
@@ -88,49 +72,63 @@ export default function PaymentPage() {
       return;
     }
 
-    // ⭐ 多票種
-    const ticketsPayload = Object.entries(ticketCounts)
-      .filter(([_, qty]) => qty > 0)
-      .map(([ticketClassID, quantity]) => ({
-        ticketClassID,
-        quantity,
-      }));
-
-    // ⭐ 多餐點
-    const mealsPayload = Object.entries(mealCounts)
-      .filter(([_, qty]) => qty > 0)
-      .map(([mealsID, quantity]) => ({
-        mealsID,
-        quantity,
-      }));
-
-    const payload = {
-      memberID,
-      showingID: showing.showingID,
-      seatNumbers: selectedSeats,
-      tickets: ticketsPayload,
-      meals: mealsPayload,
-      totalPrice,
-      paymentMethod: paymentMethod === "stored" ? "balance" : "creditcard",
-      cardInfo:
-        paymentMethod === "credit"
-          ? cardInfo
-          : { cardNumber: "", expirationDate: "", securityCode: "" },
-    };
+    setLoading(true);
 
     try {
-      setLoading(true);
+      // 生成每張票的單筆資料
+      const seatsPayload = [];
+      const ticketIDs = [];
+      Object.entries(ticketCounts).forEach(([ticketClassID, count]) => {
+        for (let i = 0; i < count; i++) {
+          ticketIDs.push(ticketClassID);
+        }
+      });
 
-      const res = await axios.post("/api/bookings/create", payload);
+      // 餐點陣列展開
+      const mealsArray = [];
+      Object.entries(mealCounts).forEach(([mealsID, count]) => {
+        for (let i = 0; i < count; i++) {
+          mealsArray.push(mealsID);
+        }
+      });
 
-      if (res.data.success) {
-        alert("付款成功");
-        navigate("/success", {
-          state: { orderID: res.data.orderID },
+      // 每張票生成 payload，餐點依序分配
+      selectedSeats.forEach((seat, idx) => {
+        const ticketClassID = ticketIDs[idx];
+        const ticket = ticketClasses.find((t) => t.ticketClassID === ticketClassID);
+        const unitPrice = ticket?.ticketClassPrice || 0;
+
+        const mealID = mealsArray[idx]; // 對應餐點，超過票數就 undefined
+        const mealsPayload = mealID ? [{ mealsID: mealID, quantity: 1 }] : [];
+
+        seatsPayload.push({
+          memberID,
+          showingID: showing.showingID,
+          seatNumbers: [seat], // 單張票
+          ticketTypeID: ticketClassID,
+          unitPrice,
+          paymentMethod: paymentMethod === "stored" ? "balance" : "creditcard",
+          cardInfo:
+            paymentMethod === "credit"
+              ? cardInfo
+              : { cardNumber: "", expirationDate: "", securityCode: "" },
+          meals: mealsPayload,
         });
-      } else {
-        alert(res.data.error || "付款失敗");
+      });
+
+      // 逐筆送後端
+      for (const payload of seatsPayload) {
+        const res = await axios.post(`${apiBase}/api/bookings/create`, payload);
+        if (!res.data.success) {
+          alert(res.data.error || "付款失敗");
+          setLoading(false);
+          return;
+        }
       }
+
+      alert("付款成功");
+      // 付款成功後直接跳 RelatedBrowsePage
+      navigate("/related-browse");
     } catch (err) {
       alert(err.response?.data?.error || "付款失敗");
     } finally {
@@ -172,9 +170,7 @@ export default function PaymentPage() {
             <Typography>票種：</Typography>
             {Object.entries(ticketCounts).map(([id, count]) => {
               if (count <= 0) return null;
-              const ticket = ticketClasses.find(
-                (t) => t.ticketClassID === id
-              );
+              const ticket = ticketClasses.find((t) => t.ticketClassID === id);
               return (
                 <Typography key={id}>
                   {ticket?.ticketClassName || id} × {count}
