@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Divider } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 export default function MemberPage() {
@@ -15,6 +15,8 @@ export default function MemberPage() {
     newPassword: "",
     confirmPassword: ""
   });
+  const [bookings, setBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
 
   // 未登入直接踢回登入頁
   useEffect(() => {
@@ -25,9 +27,7 @@ export default function MemberPage() {
 
     axios
       .get("http://localhost:3000/api/auth/profile", {
-        headers: {
-          Authorization: sessionToken
-        }
+        headers: { Authorization: sessionToken }
       })
       .then(res => {
         if (res.data.success) {
@@ -43,10 +43,43 @@ export default function MemberPage() {
           navigate("/login");
         }
       })
-      .catch(() => {
-        navigate("/login");
-      });
+      .catch(() => navigate("/login"));
   }, [navigate, sessionToken]);
+
+  // 取得會員訂票紀錄
+  const fetchBookings = async () => {
+    if (!member) return;
+    setLoadingBookings(true);
+    try {
+      const res = await axios.get(
+        `http://localhost:3000/api/bookings/member/${member.memberID}`,
+        { headers: { Authorization: sessionToken } }
+      );
+      if (res.data.success) {
+        setBookings(res.data.bookings);
+      }
+    } catch (error) {
+      alert("取得訂票紀錄失敗");
+    }
+    setLoadingBookings(false);
+  };
+
+  // 取消訂票
+  const handleCancelBooking = async (orderID) => {
+    if (!window.confirm("確定要取消這張電影票嗎？")) return;
+    try {
+      const res = await axios.delete(
+        `http://localhost:3000/api/bookings/${orderID}`,
+        { headers: { Authorization: sessionToken } }
+      );
+      if (res.data.success) {
+        alert("取消成功");
+        setBookings(bookings.filter(b => b.orderID !== orderID));
+      }
+    } catch {
+      alert("取消失敗");
+    }
+  };
 
   const handleUpdate = async () => {
     if (formData.newPassword !== formData.confirmPassword) {
@@ -60,19 +93,13 @@ export default function MemberPage() {
       memberPhone: formData.memberPhone
     };
 
-    if (formData.newPassword) {
-      payload.memberPwd = formData.newPassword;
-    }
+    if (formData.newPassword) payload.memberPwd = formData.newPassword;
 
     try {
       const res = await axios.put(
         `http://localhost:3000/api/members/${member.memberID}`,
         payload,
-        {
-          headers: {
-            Authorization: sessionToken
-          }
-        }
+        { headers: { Authorization: sessionToken } }
       );
 
       if (res.data.success) {
@@ -141,9 +168,7 @@ export default function MemberPage() {
             height: "fit-content"
           }}
         >
-          <Typography sx={{ fontWeight: "bold", mb: 1 }}>
-            儲值資訊
-          </Typography>
+          <Typography sx={{ fontWeight: "bold", mb: 1 }}>儲值資訊</Typography>
           <Typography sx={{ fontSize: 14 }}>
             目前餘額：{member.memberBalance}
           </Typography>
@@ -165,9 +190,54 @@ export default function MemberPage() {
         </Button>
       </Box>
 
-      <Typography
-        sx={{ textAlign: "center", fontSize: 12, color: "#666", mt: 3 }}
-      >
+      <Divider sx={{ my: 4 }} />
+
+      {/* ===== 訂票管理區塊 ===== */}
+      <Box>
+        <Typography sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
+          我的電影票
+        </Typography>
+        <Box sx={{ textAlign: "center", mb: 2 }}>
+          <Button variant="contained" onClick={fetchBookings} disabled={loadingBookings}>
+            {loadingBookings ? "載入中..." : "刷新我的電影票"}
+          </Button>
+        </Box>
+
+        {bookings.length === 0 && !loadingBookings && (
+          <Typography sx={{ textAlign: "center", color: "#666" }}>尚無訂票紀錄</Typography>
+        )}
+
+        {bookings.map((b) => (
+          <Box
+            key={b.orderID}
+            sx={{
+              border: "1px solid #ccc",
+              borderRadius: 2,
+              padding: 2,
+              mb: 2,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}
+          >
+            <Box>
+              <Typography>訂單編號: {b.orderID}</Typography>
+              <Typography>影城場次: {b.showingID}</Typography>
+              <Typography>座位: {b.seatNumber}</Typography>
+              <Typography>票種: {b.ticketTypeID}</Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => handleCancelBooking(b.orderID)}
+            >
+              退票
+            </Button>
+          </Box>
+        ))}
+      </Box>
+
+      <Typography sx={{ textAlign: "center", fontSize: 12, color: "#666", mt: 3 }}>
         會員資料更改成功介面示意圖
       </Typography>
     </Box>
@@ -175,7 +245,6 @@ export default function MemberPage() {
 }
 
 /* ====== 共用元件 ====== */
-
 function Field({ label, value }) {
   return (
     <Box sx={{ mb: 2 }}>

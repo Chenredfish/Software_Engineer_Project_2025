@@ -75,50 +75,40 @@ export default function PaymentPage() {
     setLoading(true);
 
     try {
-      // 生成每張票的單筆資料
-      const seatsPayload = [];
+      // 展開票種
       const ticketIDs = [];
-      Object.entries(ticketCounts).forEach(([ticketClassID, count]) => {
-        for (let i = 0; i < count; i++) {
-          ticketIDs.push(ticketClassID);
-        }
+      Object.entries(ticketCounts).forEach(([ticketTypeID, count]) => {
+        for (let i = 0; i < count; i++) ticketIDs.push(ticketTypeID);
       });
 
-      // 餐點陣列展開
+      // 展開餐點
       const mealsArray = [];
       Object.entries(mealCounts).forEach(([mealsID, count]) => {
-        for (let i = 0; i < count; i++) {
-          mealsArray.push(mealsID);
-        }
+        for (let i = 0; i < count; i++) mealsArray.push(mealsID);
       });
 
-      // 每張票生成 payload，餐點依序分配
-      selectedSeats.forEach((seat, idx) => {
-        const ticketClassID = ticketIDs[idx];
-        const ticket = ticketClasses.find((t) => t.ticketClassID === ticketClassID);
+      for (let i = 0; i < selectedSeats.length; i++) {
+        const seat = selectedSeats[i];
+        const ticketTypeID = ticketIDs[i];
+        const ticket = ticketClasses.find((t) => t.ticketClassID === ticketTypeID);
         const unitPrice = ticket?.ticketClassPrice || 0;
 
-        const mealID = mealsArray[idx]; // 對應餐點，超過票數就 undefined
-        const mealsPayload = mealID ? [{ mealsID: mealID, quantity: 1 }] : [];
+        const mealsID = mealsArray[i] || null; // 超過票數就 null
 
-        seatsPayload.push({
+        const payload = {
           memberID,
           showingID: showing.showingID,
           seatNumbers: [seat], // 單張票
-          ticketTypeID: ticketClassID,
+          ticketTypeID,
           unitPrice,
           paymentMethod: paymentMethod === "stored" ? "balance" : "creditcard",
-          cardInfo:
-            paymentMethod === "credit"
-              ? cardInfo
-              : { cardNumber: "", expirationDate: "", securityCode: "" },
-          meals: mealsPayload,
-        });
-      });
+          mealsID,
+          cardNumber: paymentMethod === "credit" ? cardInfo.cardNumber : undefined,
+          securityCode: paymentMethod === "credit" ? cardInfo.securityCode : undefined,
+          expirationDate: paymentMethod === "credit" ? cardInfo.expirationDate : undefined,
+        };
 
-      // 逐筆送後端
-      for (const payload of seatsPayload) {
-        const res = await axios.post(`${apiBase}/api/bookings/create`, payload);
+        const res = await axios.post("http://localhost:3000/api/bookings/create", payload);
         if (!res.data.success) {
           alert(res.data.error || "付款失敗");
           setLoading(false);
@@ -127,7 +117,6 @@ export default function PaymentPage() {
       }
 
       alert("付款成功");
-      // 付款成功後直接跳 RelatedBrowsePage
       navigate("/related-browse");
     } catch (err) {
       alert(err.response?.data?.error || "付款失敗");
