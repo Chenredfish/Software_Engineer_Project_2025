@@ -75,7 +75,7 @@ export default function LoginPage() {
           { label: "電影介紹", path: "/movies" },
           { label: "餐飲介紹", path: "/food" },
           { label: "訂票系統", path: "/book" }, // ⭐ 重點
-          { label: "快搜系統", path: "/search" },
+          { label: "快搜系統", path: "/quick-search" },
           { label: "登入 / 註冊會員", path: "/login" }
         ].map((item) => (
           <Typography

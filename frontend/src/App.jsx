@@ -18,6 +18,8 @@ import MealDetailPage from "./pages/MealDetailPage";
 import SeatPage from "./pages/SeatPage";
 import MealSelectPage from "./pages/MealSelectPage";
 import PaymentPage from "./pages/PaymentPage";
+import QuickSearchPage from "./pages/QuickSearchPage";
+
 
 
 function App() {
@@ -43,9 +45,8 @@ function App() {
         <Route path="/seat" element={<SeatPage />} />
         <Route path="/mealselect" element={<MealSelectPage />} />
         <Route path="/payment" element={<PaymentPage />} />
-        {/* 以下都先未接入. */}
-        <Route path="/activities" element={<Placeholder title="活動介紹" />} />
-        <Route path="/quick-search" element={<Placeholder title="快搜系統" />} />
+        <Route path="/quick-search" element={<QuickSearchPage />} />
+
       </Routes>
     </BrowserRouter>
   );
