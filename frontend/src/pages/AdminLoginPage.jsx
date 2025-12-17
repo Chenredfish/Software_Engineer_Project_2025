@@ -27,6 +27,7 @@ export default function AdminLoginPage() {
       );
 
       alert("管理員登入成功");
+      localStorage.setItem("adminToken", res.data.adminToken);
 
       // 之後你可以導到後台頁
       navigate("/admin/dashboard");

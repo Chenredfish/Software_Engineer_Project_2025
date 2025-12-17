@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Divider, Button } from "@mui/material";
+import { Box, Typography, Divider, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import MovieSelect from "../InputComponent/MovieSelect";
@@ -21,19 +21,53 @@ export default function BookPage() {
   const [sessionId, setSessionId] = useState("");
   const [selectedSession, setSelectedSession] = useState(null);
 
+  const [member, setMember] = useState(null); // 存會員資訊
+  const [dialogMsg, setDialogMsg] = useState(""); // 對話框訊息
+  const [openDialog, setOpenDialog] = useState(false); // 控制對話框開關
+
   const apiBase = "http://localhost:3000";
+
+  /* ----------- 檢查會員登入 ----------- */
+  useEffect(() => {
+    const sessionToken = localStorage.getItem("sessionToken");
+    if (!sessionToken) {
+      setDialogMsg("請先登入會員才能訂票");
+      setOpenDialog(true);
+      return;
+    }
+
+    fetch(`${apiBase}/api/auth/profile`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": sessionToken,
+      },
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setMember(data.member);
+        } else {
+          setDialogMsg("會員身份驗證失敗，請重新登入");
+          setOpenDialog(true);
+        }
+      })
+      .catch(() => {
+        setDialogMsg("會員身份驗證失敗，請重新登入");
+        setOpenDialog(true);
+      });
+  }, []);
 
   /* ----------- 取得電影 & 影城 ----------- */
   useEffect(() => {
     fetch(`${apiBase}/api/movies`)
       .then(res => res.json())
       .then(setMovies)
-      .catch(err => alert("電影資料讀取失敗"));
+      .catch(() => alert("電影資料讀取失敗"));
 
     fetch(`${apiBase}/api/cinemas`)
       .then(res => res.json())
       .then(setCinemas)
-      .catch(err => alert("影城資料讀取失敗"));
+      .catch(() => alert("影城資料讀取失敗"));
   }, []);
 
   /* ----------- cinema → theaters ----------- */
@@ -68,31 +102,41 @@ export default function BookPage() {
       return;
     }
 
-  fetch(`${apiBase}/api/showings/${movieId}/${theaterId}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        setSessions(data.showings);
-      } else {
-        setSessions([]);
-      }
-      setSessionId("");
-      setSelectedSession(null);
-    })
-    .catch(() => alert("場次資料讀取失敗"));
+    fetch(`${apiBase}/api/showings/${movieId}/${theaterId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setSessions(data.showings);
+        } else {
+          setSessions([]);
+        }
+        setSessionId("");
+        setSelectedSession(null);
+      })
+      .catch(() => alert("場次資料讀取失敗"));
   }, [movieId, theaterId]);
 
   /* ----------- 前往 SeatPage ----------- */
   const handleBooking = (selectedSession) => {
+    if (!member) {
+      setDialogMsg("請先登入會員才能訂票");
+      setOpenDialog(true);
+      return;
+    }
+
     if (!selectedSession) return;
 
     navigate("/mealselect", {
       state: {
-        showing: selectedSession, // 將選中的場次傳過去
+        showing: selectedSession,
+
+        // 🔑 往下傳的會員資料
+        memberID: member.memberID,
+        memberBalance: member.memberBalance,
+        memberName: member.memberName,
       },
     });
   };
-
 
 
   return (
@@ -113,9 +157,7 @@ export default function BookPage() {
           value={sessionId}
           onChange={(id) => {
             setSessionId(id);
-            setSelectedSession(
-              sessions.find((s) => s.showingID === id)
-            );
+            setSelectedSession(sessions.find((s) => s.showingID === id));
           }}
         />
 
@@ -128,8 +170,22 @@ export default function BookPage() {
         >
           前往選擇餐點
         </Button>
-
       </Box>
+
+      {/* ----------- MUI Dialog for Error ----------- */}
+      <Dialog open={openDialog} onClose={() => navigate("/login")}>
+        <DialogTitle>錯誤</DialogTitle>
+        <DialogContent>{dialogMsg}</DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => navigate("/login")}
+            color="primary"
+            autoFocus
+          >
+            確定
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
