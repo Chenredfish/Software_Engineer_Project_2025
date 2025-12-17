@@ -21,14 +21,13 @@ export default function MealSelectPage() {
     return <Typography>尚未選擇場次，請返回訂票頁面</Typography>;
   }
 
+  const apiBase = "http://localhost:3000";
+  const MAX_TICKETS = 10;
+
   const [ticketClasses, setTicketClasses] = useState([]);
   const [meals, setMeals] = useState([]);
-
   const [ticketCounts, setTicketCounts] = useState({});
   const [mealCounts, setMealCounts] = useState({});
-
-  const MAX_TICKETS = 10;
-  const apiBase = "http://localhost:3000";
 
   // =========================
   // 取得票種 & 餐點
@@ -62,33 +61,77 @@ export default function MealSelectPage() {
   );
 
   // =========================
+  // 計算餐點總數
+  // =========================
+  const totalMeals = Object.values(mealCounts).reduce(
+    (sum, val) => sum + Number(val || 0),
+    0
+  );
+
+  // =========================
   // 計算總價格
   // =========================
   const totalPrice =
-    (Array.isArray(ticketClasses) ? ticketClasses : []).reduce(
-      (sum, t) => sum + (ticketCounts[t.ticketClassID] || 0) * t.ticketClassPrice,
+    ticketClasses.reduce(
+      (sum, t) =>
+        sum + (ticketCounts[t.ticketClassID] || 0) * t.ticketClassPrice,
       0
     ) +
-    (Array.isArray(meals) ? meals : []).reduce(
-      (sum, m) => sum + (mealCounts[m.mealsID] || 0) * m.mealsPrice,
+    meals.reduce(
+      (sum, m) =>
+        sum + (mealCounts[m.mealsID] || 0) * m.mealsPrice,
       0
     );
 
   // =========================
-  // 改變票數
+  // 改變票數（限制 10 張）
   // =========================
   const handleTicketChange = (id, val) => {
     const newCount = Number(val || 0);
-    const newTotal = Object.entries(ticketCounts).reduce((sum, [key, value]) => {
-      return sum + (key === id ? newCount : Number(value || 0));
-    }, 0);
+
+    const newTotal = Object.entries(ticketCounts).reduce(
+      (sum, [key, value]) =>
+        sum + (key === id ? newCount : Number(value || 0)),
+      0
+    );
 
     if (newTotal > MAX_TICKETS) {
       alert(`票數總和不能超過 ${MAX_TICKETS} 張`);
       return;
     }
 
-    setTicketCounts(prev => ({ ...prev, [id]: newCount }));
+    setTicketCounts(prev => ({
+      ...prev,
+      [id]: newCount,
+    }));
+
+    // 若票數變少，餐點超過則清掉
+    if (totalMeals > newTotal) {
+      setMealCounts({});
+    }
+  };
+
+  // =========================
+  // 改變餐點數（不得超過票數）
+  // =========================
+  const handleMealChange = (id, val) => {
+    const newCount = Number(val || 0);
+
+    const newTotalMeals = Object.entries(mealCounts).reduce(
+      (sum, [key, value]) =>
+        sum + (key === id ? newCount : Number(value || 0)),
+      0
+    );
+
+    if (newTotalMeals > totalTickets) {
+      alert("餐點數量不能超過訂票數量");
+      return;
+    }
+
+    setMealCounts(prev => ({
+      ...prev,
+      [id]: newCount,
+    }));
   };
 
   // =========================
@@ -97,6 +140,11 @@ export default function MealSelectPage() {
   const handleNext = () => {
     if (totalTickets === 0) {
       alert("請選擇至少一張票");
+      return;
+    }
+
+    if (totalMeals > totalTickets) {
+      alert("餐點數量不能超過訂票數量");
       return;
     }
 
@@ -118,9 +166,11 @@ export default function MealSelectPage() {
       <Typography variant="h5" fontWeight="bold">
         選擇票種 & 餐點
       </Typography>
+
       <Typography color="text.secondary" sx={{ mb: 2 }}>
         {showing.movieName} ｜ {showing.showingTime}
       </Typography>
+
       <Divider sx={{ my: 2 }} />
 
       {/* 票種選擇 */}
@@ -128,12 +178,13 @@ export default function MealSelectPage() {
         <Typography variant="h6" sx={{ mb: 2 }}>
           票種選擇
         </Typography>
-        {(Array.isArray(ticketClasses) ? ticketClasses : []).map(tc => (
+
+        {ticketClasses.map(tc => (
           <Box
             key={tc.ticketClassID}
             sx={{ display: "flex", alignItems: "center", mb: 1 }}
           >
-            <Typography sx={{ width: 160 }}>
+            <Typography sx={{ width: 180 }}>
               {tc.ticketClassName} (${tc.ticketClassPrice})
             </Typography>
             <TextField
@@ -141,11 +192,14 @@ export default function MealSelectPage() {
               size="small"
               sx={{ width: 100 }}
               value={ticketCounts[tc.ticketClassID] || 0}
-              onChange={e => handleTicketChange(tc.ticketClassID, e.target.value)}
+              onChange={e =>
+                handleTicketChange(tc.ticketClassID, e.target.value)
+              }
               inputProps={{ min: 0 }}
             />
           </Box>
         ))}
+
         <Typography sx={{ mt: 1 }}>
           總票數：{totalTickets} / {MAX_TICKETS}
         </Typography>
@@ -155,34 +209,39 @@ export default function MealSelectPage() {
 
       {/* 餐點選擇 */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
+        <Typography variant="h6" sx={{ mb: 1 }}>
           餐點選擇
         </Typography>
+
+        <Typography color="text.secondary" sx={{ mb: 2 }}>
+          餐點最多可選 {totalTickets} 份
+        </Typography>
+
         <Grid container spacing={3}>
-          {(Array.isArray(meals) ? meals : []).map(meal => (
+          {meals.map(meal => (
             <Grid item key={meal.mealsID} xs={12} sm={6} md={4}>
-              <Card sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+              <Card sx={{ height: "100%" }}>
                 <CardMedia
                   component="img"
                   height="140"
-                  image={`http://localhost:3000/${meal.mealsPhoto}`}
+                  image={`${apiBase}/${meal.mealsPhoto}`}
                   alt={meal.mealName}
                 />
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant="subtitle1">{meal.mealName}</Typography>
-                  <Typography variant="body2" color="text.secondary">
+                <CardContent>
+                  <Typography variant="subtitle1">
+                    {meal.mealName}
+                  </Typography>
+                  <Typography color="text.secondary">
                     ${meal.mealsPrice}
                   </Typography>
+
                   <TextField
                     type="number"
                     size="small"
-                    sx={{ mt: 1, width: "80px" }}
+                    sx={{ mt: 1, width: 80 }}
                     value={mealCounts[meal.mealsID] || 0}
                     onChange={e =>
-                      setMealCounts(prev => ({
-                        ...prev,
-                        [meal.mealsID]: Number(e.target.value || 0),
-                      }))
+                      handleMealChange(meal.mealsID, e.target.value)
                     }
                     inputProps={{ min: 0 }}
                   />
@@ -195,13 +254,11 @@ export default function MealSelectPage() {
 
       <Divider sx={{ my: 2 }} />
 
-      {/* 總價格 */}
       <Typography variant="h6">總價：${totalPrice}</Typography>
 
-      {/* 下一步 */}
       <Box mt={3} textAlign="right">
         <Button variant="contained" size="large" onClick={handleNext}>
-          確認並選座
+          確認並選擇座位
         </Button>
       </Box>
     </Box>
