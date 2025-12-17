@@ -59,7 +59,6 @@ export default function RelatedBrowsePage() {
     }}
   >
     <NavItem text="影城介紹" onClick={() => navigate("/cinemas")} />
-    <NavItem text="活動介紹" onClick={() => navigate("/activities")} />
     <NavItem text="電影介紹" onClick={() => navigate("/movies")} />
     <NavItem text="餐飲介紹" onClick={() => navigate("/food")} />
     <NavItem text="訂票系統" onClick={() => navigate("/booking")} />
@@ -93,10 +92,7 @@ export default function RelatedBrowsePage() {
       <Box sx={{ display: "flex", justifyContent: "center", mt: 5, gap: 6 }}>
         {/* 左側 */}
         <Box sx={{ width: 420 }}>
-          <Typography sx={{ fontWeight: "bold", mb: 1 }}>最新公告</Typography>
-          <Typography sx={{ fontSize: 14, mb: 2 }}>
-            （公告 API 尚未接入）
-          </Typography>
+          
 
           <Typography sx={{ fontWeight: "bold", mb: 1 }}>
   熱門電影

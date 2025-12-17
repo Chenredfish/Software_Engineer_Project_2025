@@ -36,7 +36,7 @@ export default function MealListPage() {
         component="img"
         src={`http://localhost:3000/${meal.mealsPhoto}`}
         alt={meal.mealName}
-        sx={{ width: "100%", border: "1px solid #ccc" }}
+        sx={{ width: "70%", border: "1px solid #ccc" }}
       />
     </Link>
 
