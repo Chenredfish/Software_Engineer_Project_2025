@@ -68,16 +68,18 @@ export default function BookPage() {
       return;
     }
 
-    fetch(
-      `${apiBase}/api/showings?movieID=${movieId}&theaterID=${theaterId}`
-    )
-      .then(res => res.json())
-      .then(data => {
-        setSessions(data || []);
-        setSessionId("");
-        setSelectedSession(null);
-      })
-      .catch(() => alert("場次資料讀取失敗"));
+  fetch(`${apiBase}/api/showings/${movieId}/${theaterId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        setSessions(data.showings);
+      } else {
+        setSessions([]);
+      }
+      setSessionId("");
+      setSelectedSession(null);
+    })
+    .catch(() => alert("場次資料讀取失敗"));
   }, [movieId, theaterId]);
 
   /* ----------- 前往 SeatPage ----------- */
