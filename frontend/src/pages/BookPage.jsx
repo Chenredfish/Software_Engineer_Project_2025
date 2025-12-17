@@ -126,7 +126,7 @@ export default function BookPage() {
           disabled={!selectedSession}
           onClick={() => handleBooking(selectedSession)}
         >
-          選擇餐點
+          前往選擇餐點
         </Button>
 
       </Box>

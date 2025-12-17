@@ -258,7 +258,7 @@ export default function MealSelectPage() {
 
       <Box mt={3} textAlign="right">
         <Button variant="contained" size="large" onClick={handleNext}>
-          確認並選座
+          確認並選擇座位
         </Button>
       </Box>
     </Box>
