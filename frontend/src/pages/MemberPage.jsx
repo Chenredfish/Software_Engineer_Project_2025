@@ -18,6 +18,9 @@ export default function MemberPage() {
   const [bookings, setBookings] = useState([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
 
+  // 🔒 密碼只能是英數字（不能有特殊符號）
+  const passwordRegex = /^[A-Za-z0-9]+$/;
+
   // 未登入直接踢回登入頁
   useEffect(() => {
     if (!sessionToken) {
@@ -58,7 +61,7 @@ export default function MemberPage() {
       if (res.data.success) {
         setBookings(res.data.bookings);
       }
-    } catch (error) {
+    } catch {
       alert("取得訂票紀錄失敗");
     }
     setLoadingBookings(false);
@@ -82,8 +85,18 @@ export default function MemberPage() {
   };
 
   const handleUpdate = async () => {
+    // 🔐 密碼一致檢查
     if (formData.newPassword !== formData.confirmPassword) {
       alert("兩次密碼輸入不一致");
+      return;
+    }
+
+    // 🔐 特殊符號檢查（只有在有輸入新密碼時才檢查）
+    if (
+      formData.newPassword &&
+      !passwordRegex.test(formData.newPassword)
+    ) {
+      alert("密碼不可包含特殊符號，只能使用英文字母與數字");
       return;
     }
 
@@ -146,7 +159,7 @@ export default function MemberPage() {
           <Field label="電子信箱" value={member.memberAccount} />
           <Field label="密碼" value="********" />
           <EditableField
-            label="新密碼"
+            label="新密碼（僅限英數字）"
             type="password"
             value={formData.newPassword}
             onChange={v => setFormData({ ...formData, newPassword: v })}
@@ -204,7 +217,9 @@ export default function MemberPage() {
         </Box>
 
         {bookings.length === 0 && !loadingBookings && (
-          <Typography sx={{ textAlign: "center", color: "#666" }}>尚無訂票紀錄</Typography>
+          <Typography sx={{ textAlign: "center", color: "#666" }}>
+            尚無訂票紀錄
+          </Typography>
         )}
 
         {bookings.map((b) => (
