@@ -18,6 +18,10 @@ export default function RelatedBrowsePage() {
   const [theaters, setTheaters] = useState([]);
   const [selectedTheater, setSelectedTheater] = useState("");
 
+  const [member, setMember] = useState(null);
+  const [checkedLogin, setCheckedLogin] = useState(false);
+
+
 
 
 
@@ -38,6 +42,29 @@ export default function RelatedBrowsePage() {
     axios.get("http://localhost:3000/api/cinemas")
       .then(res => setCinemas(res.data));
   }, []);
+  useEffect(() => {
+  if (!sessionToken) {
+    setCheckedLogin(true);
+    return;
+  }
+
+  axios
+    .get("http://localhost:3000/api/auth/profile", {
+      headers: {
+        Authorization: sessionToken
+      }
+    })
+    .then(res => {
+      if (res.data.success) {
+        setMember(res.data.member);
+      }
+      setCheckedLogin(true);
+    })
+    .catch(() => {
+      setCheckedLogin(true);
+    });
+}, [sessionToken]);
+
 
 
   const handleLogout = async () => {
@@ -252,9 +279,14 @@ setShowings(res.data.showings || []);
       return;
     }
 
-    navigate("/seat", {
+    navigate("/mealselect", {
       state: {
         showing: selectedShowing,
+
+        memberID: member.memberID,
+        memberName: member.memberName,
+        memberBalance: member.memberBalance,
+        
         ticketCounts: { T00001: 1 }, // 預設 1 張票（老師不會刁）
         mealCounts: {},
         totalPrice: 0

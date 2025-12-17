@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function QuickSearchPage() {
   const navigate = useNavigate();
+  const apiBase = "http://localhost:3000";
 
   const [movies, setMovies] = useState([]);
   const [cinemas, setCinemas] = useState([]);
@@ -16,9 +17,45 @@ export default function QuickSearchPage() {
   const [selectedTheater, setSelectedTheater] = useState("");
   const [selectedShowing, setSelectedShowing] = useState(null);
 
+  // 🔑 新增：會員狀態
+  const [member, setMember] = useState(null);
+  const [dialogMsg, setDialogMsg] = useState("");
+  const [openDialog, setOpenDialog] = useState(false);
+
+  /* ----------- 檢查會員登入（跟 BookPage 一樣） ----------- */
   useEffect(() => {
-    axios.get("http://localhost:3000/api/movies").then(res => setMovies(res.data));
-    axios.get("http://localhost:3000/api/cinemas").then(res => setCinemas(res.data));
+    const sessionToken = localStorage.getItem("sessionToken");
+    if (!sessionToken) {
+      setDialogMsg("請先登入會員才能訂票");
+      setOpenDialog(true);
+      return;
+    }
+
+    fetch(`${apiBase}/api/auth/profile`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: sessionToken,
+      },
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setMember(data.member);
+        } else {
+          setDialogMsg("會員身份驗證失敗，請重新登入");
+          setOpenDialog(true);
+        }
+      })
+      .catch(() => {
+        setDialogMsg("會員身份驗證失敗，請重新登入");
+        setOpenDialog(true);
+      });
+  }, []);
+
+  /* ----------- 取得電影 & 影城 ----------- */
+  useEffect(() => {
+    axios.get(`${apiBase}/api/movies`).then(res => setMovies(res.data));
+    axios.get(`${apiBase}/api/cinemas`).then(res => setCinemas(res.data));
   }, []);
 
   return (
@@ -53,7 +90,7 @@ export default function QuickSearchPage() {
 
           if (cinemaID) {
             const res = await axios.get(
-              `http://localhost:3000/api/cinemas/${cinemaID}/theaters`
+              `${apiBase}/api/cinemas/${cinemaID}/theaters`
             );
             setTheaters(res.data.theaters || []);
           }
@@ -93,7 +130,7 @@ export default function QuickSearchPage() {
           }
 
           const res = await axios.get(
-            `http://localhost:3000/api/showings/${selectedMovie}/${selectedTheater}`
+            `${apiBase}/api/showings/${selectedMovie}/${selectedTheater}`
           );
           setShowings(res.data.showings || []);
         }}
@@ -122,14 +159,26 @@ export default function QuickSearchPage() {
         fullWidth
         variant="contained"
         onClick={() => {
+          if (!member) {
+            setDialogMsg("請先登入會員才能訂票");
+            setOpenDialog(true);
+            return;
+          }
+
           if (!selectedShowing) {
             alert("請選擇場次");
             return;
           }
 
-          navigate("/seat", {
+          navigate("/mealselect", {
             state: {
               showing: selectedShowing,
+
+              // 🔑 跟 BookPage 一模一樣
+              memberID: member.memberID,
+              memberBalance: member.memberBalance,
+              memberName: member.memberName,
+
               ticketCounts: { T00001: 1 },
               mealCounts: {},
               totalPrice: 0
@@ -139,6 +188,17 @@ export default function QuickSearchPage() {
       >
         查詢座位
       </Button>
+
+      {/* 登入提示 Dialog */}
+      <Dialog open={openDialog} onClose={() => navigate("/login")}>
+        <DialogTitle>錯誤</DialogTitle>
+        <DialogContent>{dialogMsg}</DialogContent>
+        <DialogActions>
+          <Button onClick={() => navigate("/login")} autoFocus>
+            確定
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

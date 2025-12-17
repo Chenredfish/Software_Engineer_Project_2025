@@ -117,7 +117,7 @@ export default function PaymentPage() {
       }
 
       alert("付款成功");
-      navigate("/related-browse");
+      navigate("/login");
     } catch (err) {
       alert(err.response?.data?.error || "付款失敗");
     } finally {
