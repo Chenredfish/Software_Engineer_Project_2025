@@ -61,7 +61,7 @@ export default function RelatedBrowsePage() {
     <NavItem text="影城介紹" onClick={() => navigate("/cinemas")} />
     <NavItem text="電影介紹" onClick={() => navigate("/movies")} />
     <NavItem text="餐飲介紹" onClick={() => navigate("/food")} />
-    <NavItem text="訂票系統" onClick={() => navigate("/booking")} />
+    <NavItem text="訂票系統" onClick={() => navigate("/book")} />
     <NavItem text="快搜系統" onClick={() => navigate("/quick-search")} />
   </Box>
 
