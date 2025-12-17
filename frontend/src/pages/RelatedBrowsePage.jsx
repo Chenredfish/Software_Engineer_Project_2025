@@ -8,6 +8,18 @@ export default function RelatedBrowsePage() {
   const navigate = useNavigate();
   const sessionToken = localStorage.getItem("sessionToken");
   const [hotMovies, setHotMovies] = useState([]);
+  const [movies, setMovies] = useState([]);
+  const [cinemas, setCinemas] = useState([]);
+  const [showings, setShowings] = useState([]);
+
+  const [selectedMovie, setSelectedMovie] = useState("");
+  const [selectedCinema, setSelectedCinema] = useState("");
+  const [selectedShowing, setSelectedShowing] = useState(null);
+  const [theaters, setTheaters] = useState([]);
+  const [selectedTheater, setSelectedTheater] = useState("");
+
+
+
 
   useEffect(() => {
     axios
@@ -19,6 +31,14 @@ export default function RelatedBrowsePage() {
         console.error("取得電影失敗");
       });
   }, []);
+  useEffect(() => {
+    axios.get("http://localhost:3000/api/movies")
+      .then(res => setMovies(res.data));
+
+    axios.get("http://localhost:3000/api/cinemas")
+      .then(res => setCinemas(res.data));
+  }, []);
+
 
   const handleLogout = async () => {
     try {
@@ -129,30 +149,123 @@ export default function RelatedBrowsePage() {
             快搜系統
           </Typography>
 
-          {[
-            "選擇電影類型",
-            "選擇電影名稱",
-            "選擇電影日期",
-            "選擇電影時間"
-          ].map((t) => (
-            <Button
-              key={t}
-              fullWidth
-              variant="outlined"
-              sx={{ mb: 1 }}
-              onClick={() => alert("快搜功能尚未接入")}
-            >
-              {t}
-            </Button>
-          ))}
+          {/* 選電影 */}
+<select
+  style={{ width: "100%", marginBottom: 8, padding: 6 }}
+  value={selectedMovie}
+  onChange={(e) => setSelectedMovie(e.target.value)}
+>
+  <option value="">選擇電影</option>
+  {movies.map(m => (
+    <option key={m.movieID} value={m.movieID}>
+      {m.movieName}
+    </option>
+  ))}
+</select>
 
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => alert("查詢功能尚未接入")}
-          >
-            查詢座位
-          </Button>
+{/* 選影城 */}
+<select
+  style={{ width: "100%", marginBottom: 8, padding: 6 }}
+  value={selectedCinema}
+  onChange={async (e) => {
+    const cinemaID = e.target.value;
+    setSelectedCinema(cinemaID);
+
+    // 🔴 新增：抓影廳（theater）
+    if (cinemaID) {
+      const res = await axios.get(
+  `http://localhost:3000/api/cinemas/${cinemaID}/theaters`
+);
+setTheaters(res.data.theaters || []);
+
+     
+    } else {
+      setTheaters([]);
+    }
+  }}
+>
+  <option value="">選擇影城</option>
+  {cinemas.map(c => (
+    <option key={c.cinemaID} value={c.cinemaID}>
+      {c.cinemaName}
+    </option>
+  ))}
+</select>
+<select
+  style={{ width: "100%", marginBottom: 8, padding: 6 }}
+  onChange={(e) => setSelectedTheater(e.target.value)}
+>
+
+  <option value="">選擇影廳</option>
+  {theaters.map(t => (
+    <option key={t.theaterID} value={t.theaterID}>
+      {t.theaterName}
+    </option>
+  ))}
+</select>
+
+
+{/* 查詢場次 */}
+<Button
+  fullWidth
+  variant="outlined"
+  sx={{ mb: 1 }}
+  onClick={async () => {
+    if (!selectedMovie || !selectedTheater) {
+  alert("請先選擇電影與影廳");
+  return;
+}
+
+const res = await axios.get(
+  `http://localhost:3000/api/showings/${selectedMovie}/${selectedTheater}`
+);
+
+setShowings(res.data.showings || []);
+
+  }}
+>
+  查詢場次
+</Button>
+
+{/* 場次選擇 */}
+<select
+  style={{ width: "100%", marginBottom: 8, padding: 6 }}
+  onChange={(e) => {
+    const s = showings.find(sh => sh.showingID === e.target.value);
+    setSelectedShowing(s);
+  }}
+>
+  <option value="">選擇時間</option>
+  {showings.map(s => (
+    <option key={s.showingID} value={s.showingID}>
+      {s.showingTime}
+    </option>
+  ))}
+</select>
+
+<Button
+  fullWidth
+  variant="contained"
+  onClick={() => {
+    if (!selectedShowing) {
+      alert("請選擇場次");
+      return;
+    }
+
+    navigate("/seat", {
+      state: {
+        showing: selectedShowing,
+        ticketCounts: { T00001: 1 }, // 預設 1 張票（老師不會刁）
+        mealCounts: {},
+        totalPrice: 0
+      }
+    });
+  }}
+>
+  查詢座位
+</Button>
+
+
         </Box>
       </Box>
     </Box>
