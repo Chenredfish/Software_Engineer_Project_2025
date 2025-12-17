@@ -16,9 +16,16 @@ export default function MealSelectPage() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const showing = state?.showing;
+  const memberID = state?.memberID;
+  const memberBalance = state?.memberBalance;
+  const memberName = state?.memberName;
 
   if (!showing) {
     return <Typography>尚未選擇場次，請返回訂票頁面</Typography>;
+  }
+
+  if (!showing || !memberID) {
+  return <Typography>登入狀態失效，請重新登入</Typography>;
   }
 
   const apiBase = "http://localhost:3000";
@@ -153,11 +160,15 @@ export default function MealSelectPage() {
         showing,
         ticketCounts,
         mealCounts,
+        ticketClasses, // ⭐ 關鍵
+        meals,         // ⭐ 關鍵
         totalPrice,
+        memberID,
+        memberBalance,
+        memberName,
       },
     });
   };
-
   // =========================
   // Render
   // =========================
