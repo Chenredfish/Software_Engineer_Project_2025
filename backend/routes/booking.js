@@ -261,7 +261,7 @@ router.post('/create', async (req, res) => {
     const db = req.app.locals.db;
     const { 
         memberID, showingID, seatNumbers, ticketTypeID, unitPrice, 
-        paymentMethod, cardNumber, securityCode, expirationDate 
+        paymentMethod, mealsID, cardNumber, securityCode, expirationDate 
     } = req.body;
 
     // --- 1. 基礎參數與付款方式檢查 ---
@@ -279,7 +279,6 @@ router.post('/create', async (req, res) => {
     }
 
     const totalAmount = unitPrice * seatNumbers.length;
-    let orderID = null;
     const bookingTime = new Date().toISOString(); // 用於 bookingTime 欄位
 
     try {
@@ -336,7 +335,7 @@ router.post('/create', async (req, res) => {
             memberID: memberID, 
             showingID: showingID,
             orderStateID: 'S00001',       // 假設 S00001 = 訂單成立
-            mealsID: DEFAULT_MEALS_ID,    
+            mealsID: mealsID || DEFAULT_MEALS_ID,    
             ticketTypeID: ticketTypeID,
             bookingTime: bookingTime,     // 寫入訂單時間
             seatNumber: seatNumber,       // 寫入座位號碼 (符合您的 DB 結構)
