@@ -18,7 +18,7 @@ export default function PaymentPage() {
   const { state } = useLocation();
 
   if (!state) {
-    return <Typography>付款資料遺失，請重新訂票</Typography>;
+    return <Typography>付款資料消失，請重新訂票</Typography>;
   }
 
   const {
