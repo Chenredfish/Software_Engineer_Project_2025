@@ -251,10 +251,24 @@ router.delete('/:id', requireAuth, async (req, res) => {
       });
     }
     
+    // 退票時需要釋放座位並刪除相關記錄
+    const showingID = booking[0].showingID;
+    const seatNumber = booking[0].seatNumber;
+    
+    console.log(`退票: 釋放座位 ${showingID}-${seatNumber}`);
+    
+    // 1. 更新座位狀態為可用 (0)
+    await db.update('seat', 
+      { seatState: 0 },
+      { showingID: showingID, seatNumber: seatNumber }
+    );
+    
+    // 2. 刪除訂票記錄（ticketID 包含在 bookingrecord 中）
     await db.delete('bookingrecord', { orderID: req.params.id });
+    
     res.json({ 
       success: true,
-      message: '取消訂票成功' 
+      message: '取消訂票成功，座位已釋放' 
     });
   } catch (error) {
     res.status(500).json({ 
