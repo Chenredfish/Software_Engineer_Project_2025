@@ -149,7 +149,34 @@ router.get('/member/:memberID', requireAuth, async (req, res) => {
     }
 
     const db = req.app.locals.db;
-    const bookings = await db.findAll('bookingrecord', { memberID: req.params.memberID });
+    
+    // 添加完整的 JOIN 查詢，包含餐點資訊
+    const query = `
+      SELECT 
+        br.*,
+        s.showingTime,
+        m.movieName,
+        t.theaterName,
+        c.cinemaName,
+        tc.ticketClassName,
+        tc.ticketClassPrice,
+        os.orderStatusName,
+        ml.mealName,
+        ml.mealsPrice
+      FROM bookingrecord br
+      LEFT JOIN showing s ON br.showingID = s.showingID
+      LEFT JOIN movie m ON s.movieID = m.movieID
+      LEFT JOIN theater t ON s.theaterID = t.theaterID
+      LEFT JOIN cinema c ON t.cinemaID = c.cinemaID
+      LEFT JOIN ticketclass tc ON br.ticketTypeID = tc.ticketClassID
+      LEFT JOIN orderstatus os ON br.orderStateID = os.orderStatusID
+      LEFT JOIN meals ml ON br.mealsID = ml.mealsID
+      WHERE br.memberID = ?
+      ORDER BY br.bookingTime DESC
+    `;
+    
+    const bookings = await db.query(query, [req.params.memberID]);
+    
     res.json({
       success: true,
       bookings: bookings,

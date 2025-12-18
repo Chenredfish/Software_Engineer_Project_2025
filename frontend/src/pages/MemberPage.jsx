@@ -236,10 +236,20 @@ export default function MemberPage() {
             }}
           >
             <Box>
+              <Typography sx={{ fontWeight: 'bold', mb: 1 }}>
+                {b.movieName || '未知電影'} - {b.cinemaName || '未知影城'}
+              </Typography>
               <Typography>訂單編號: {b.orderID}</Typography>
-              <Typography>影城場次: {b.showingID}</Typography>
+              <Typography>放映時間: {b.showingTime ? new Date(b.showingTime).toLocaleString('zh-TW') : '未知時間'}</Typography>
+              <Typography>廳別: {b.theaterName || b.showingID}</Typography>
               <Typography>座位: {b.seatNumber}</Typography>
-              <Typography>票種: {b.ticketTypeID}</Typography>
+              <Typography>票種: {b.ticketClassName || b.ticketTypeID} {b.ticketClassPrice ? `($${b.ticketClassPrice})` : ''}</Typography>
+              {b.mealName && <Typography>餐點: {b.mealName} {b.mealsPrice ? `($${b.mealsPrice})` : ''}</Typography>}
+              <Typography>付款方式: {b.paymentMethod === 'balance' ? '儲值卡' : b.paymentMethod === 'creditcard' ? '信用卡' : b.paymentMethod || '未知'}</Typography>
+              <Typography>訂單狀態: {b.orderStatusName || '未知狀態'}</Typography>
+              <Typography sx={{ fontSize: '0.85em', color: '#666' }}>
+                訂票時間: {b.bookingTime ? new Date(b.bookingTime).toLocaleString('zh-TW') : '未知時間'}
+              </Typography>
             </Box>
             <Button
               variant="outlined"
