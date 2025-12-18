@@ -14,6 +14,9 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
 
+  // 🔒 密碼只能是英數字（不能有特殊符號）
+  const passwordRegex = /^[A-Za-z0-9]+$/;
+
   const handleReset = async () => {
     setError("");
 
@@ -24,6 +27,12 @@ export default function ResetPasswordPage() {
 
     if (password !== confirm) {
       setError("＊兩次密碼不一致");
+      return;
+    }
+
+    // ❌ 含有特殊符號
+    if (!passwordRegex.test(password)) {
+      setError("＊密碼不可包含特殊符號，只能使用英文字母與數字");
       return;
     }
 
@@ -59,7 +68,7 @@ export default function ResetPasswordPage() {
           type="password"
           value={password}
           onChange={e => setPassword(e.target.value)}
-          placeholder="請輸入新密碼"
+          placeholder="只能輸入英文字母與數字"
           style={{ width: "100%", padding: 8, marginBottom: 12 }}
         />
 
@@ -82,7 +91,14 @@ export default function ResetPasswordPage() {
         </Button>
 
         {error && (
-          <Typography sx={{ color: "red", fontSize: 12, mt: 2, textAlign: "center" }}>
+          <Typography
+            sx={{
+              color: "red",
+              fontSize: 12,
+              mt: 2,
+              textAlign: "center"
+            }}
+          >
             {error}
           </Typography>
         )}

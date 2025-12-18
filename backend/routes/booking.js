@@ -149,7 +149,34 @@ router.get('/member/:memberID', requireAuth, async (req, res) => {
     }
 
     const db = req.app.locals.db;
-    const bookings = await db.findAll('bookingrecord', { memberID: req.params.memberID });
+    
+    // 添加完整的 JOIN 查詢，包含餐點資訊
+    const query = `
+      SELECT 
+        br.*,
+        s.showingTime,
+        m.movieName,
+        t.theaterName,
+        c.cinemaName,
+        tc.ticketClassName,
+        tc.ticketClassPrice,
+        os.orderStatusName,
+        ml.mealName,
+        ml.mealsPrice
+      FROM bookingrecord br
+      LEFT JOIN showing s ON br.showingID = s.showingID
+      LEFT JOIN movie m ON s.movieID = m.movieID
+      LEFT JOIN theater t ON s.theaterID = t.theaterID
+      LEFT JOIN cinema c ON t.cinemaID = c.cinemaID
+      LEFT JOIN ticketclass tc ON br.ticketTypeID = tc.ticketClassID
+      LEFT JOIN orderstatus os ON br.orderStateID = os.orderStatusID
+      LEFT JOIN meals ml ON br.mealsID = ml.mealsID
+      WHERE br.memberID = ?
+      ORDER BY br.bookingTime DESC
+    `;
+    
+    const bookings = await db.query(query, [req.params.memberID]);
+    
     res.json({
       success: true,
       bookings: bookings,
@@ -224,10 +251,24 @@ router.delete('/:id', requireAuth, async (req, res) => {
       });
     }
     
+    // 退票時需要釋放座位並刪除相關記錄
+    const showingID = booking[0].showingID;
+    const seatNumber = booking[0].seatNumber;
+    
+    console.log(`退票: 釋放座位 ${showingID}-${seatNumber}`);
+    
+    // 1. 更新座位狀態為可用 (0)
+    await db.update('seat', 
+      { seatState: 0 },
+      { showingID: showingID, seatNumber: seatNumber }
+    );
+    
+    // 2. 刪除訂票記錄（ticketID 包含在 bookingrecord 中）
     await db.delete('bookingrecord', { orderID: req.params.id });
+    
     res.json({ 
       success: true,
-      message: '取消訂票成功' 
+      message: '取消訂票成功，座位已釋放' 
     });
   } catch (error) {
     res.status(500).json({ 

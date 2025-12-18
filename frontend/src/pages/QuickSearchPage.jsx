@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -17,12 +25,16 @@ export default function QuickSearchPage() {
   const [selectedTheater, setSelectedTheater] = useState("");
   const [selectedShowing, setSelectedShowing] = useState(null);
 
-  // 🔑 新增：會員狀態
+  // 會員狀態
   const [member, setMember] = useState(null);
   const [dialogMsg, setDialogMsg] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
 
-  /* ----------- 檢查會員登入（跟 BookPage 一樣） ----------- */
+  // 場次狀態
+  const [noShowingMsg, setNoShowingMsg] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
+
+  /* ---------- 檢查會員登入 ---------- */
   useEffect(() => {
     const sessionToken = localStorage.getItem("sessionToken");
     if (!sessionToken) {
@@ -34,25 +46,25 @@ export default function QuickSearchPage() {
     fetch(`${apiBase}/api/auth/profile`, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: sessionToken,
-      },
+        Authorization: sessionToken
+      }
     })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
           setMember(data.member);
         } else {
-          setDialogMsg("會員身份驗證失敗，請重新登入");
+          setDialogMsg("登入狀態失效，請重新登入");
           setOpenDialog(true);
         }
       })
       .catch(() => {
-        setDialogMsg("會員身份驗證失敗，請重新登入");
+        setDialogMsg("登入狀態失效，請重新登入");
         setOpenDialog(true);
       });
   }, []);
 
-  /* ----------- 取得電影 & 影城 ----------- */
+  /* ---------- 取得電影 & 影城 ---------- */
   useEffect(() => {
     axios.get(`${apiBase}/api/movies`).then(res => setMovies(res.data));
     axios.get(`${apiBase}/api/cinemas`).then(res => setCinemas(res.data));
@@ -68,7 +80,12 @@ export default function QuickSearchPage() {
       <select
         style={{ width: "100%", marginBottom: 8, padding: 6 }}
         value={selectedMovie}
-        onChange={(e) => setSelectedMovie(e.target.value)}
+        onChange={e => {
+          setSelectedMovie(e.target.value);
+          setShowings([]);
+          setSelectedShowing(null);
+          setHasSearched(false);
+        }}
       >
         <option value="">選擇電影</option>
         {movies.map(m => (
@@ -82,17 +99,24 @@ export default function QuickSearchPage() {
       <select
         style={{ width: "100%", marginBottom: 8, padding: 6 }}
         value={selectedCinema}
-        onChange={async (e) => {
+        onChange={async e => {
           const cinemaID = e.target.value;
           setSelectedCinema(cinemaID);
           setSelectedTheater("");
+          setTheaters([]);
           setShowings([]);
+          setSelectedShowing(null);
+          setHasSearched(false);
 
-          if (cinemaID) {
+          if (!cinemaID) return;
+
+          try {
             const res = await axios.get(
               `${apiBase}/api/cinemas/${cinemaID}/theaters`
             );
             setTheaters(res.data.theaters || []);
+          } catch {
+            setTheaters([]);
           }
         }}
       >
@@ -108,7 +132,12 @@ export default function QuickSearchPage() {
       <select
         style={{ width: "100%", marginBottom: 8, padding: 6 }}
         value={selectedTheater}
-        onChange={(e) => setSelectedTheater(e.target.value)}
+        onChange={e => {
+          setSelectedTheater(e.target.value);
+          setShowings([]);
+          setSelectedShowing(null);
+          setHasSearched(false);
+        }}
       >
         <option value="">選擇影廳</option>
         {theaters.map(t => (
@@ -123,25 +152,39 @@ export default function QuickSearchPage() {
         fullWidth
         variant="outlined"
         sx={{ mb: 1 }}
+        disabled={!selectedMovie || !selectedTheater}
         onClick={async () => {
-          if (!selectedMovie || !selectedTheater) {
-            alert("請選擇電影與影廳");
-            return;
-          }
+          try {
+            const res = await axios.get(
+              `${apiBase}/api/showings/${selectedMovie}/${selectedTheater}`
+            );
 
-          const res = await axios.get(
-            `${apiBase}/api/showings/${selectedMovie}/${selectedTheater}`
-          );
-          setShowings(res.data.showings || []);
+            const result = res.data.showings || [];
+            setShowings(result);
+            setSelectedShowing(null);
+            setHasSearched(true);
+
+            if (result.length === 0) {
+              setNoShowingMsg("此影廳目前沒有可售場次");
+            } else {
+              setNoShowingMsg("");
+            }
+          } catch {
+            setShowings([]);
+            setSelectedShowing(null);
+            setHasSearched(true);
+            setNoShowingMsg("此影廳目前沒有可售場次");
+          }
         }}
       >
         查詢場次
       </Button>
 
-      {/* 場次 */}
+      {/* 場次選擇 */}
       <select
-        style={{ width: "100%", marginBottom: 12, padding: 6 }}
-        onChange={(e) => {
+        style={{ width: "100%", marginBottom: 8, padding: 6 }}
+        disabled={showings.length === 0}
+        onChange={e => {
           const s = showings.find(sh => sh.showingID === e.target.value);
           setSelectedShowing(s);
         }}
@@ -154,10 +197,18 @@ export default function QuickSearchPage() {
         ))}
       </select>
 
+      {/* 無場次提示 */}
+      {hasSearched && noShowingMsg && (
+        <Typography sx={{ color: "red", fontSize: 13, mb: 1 }}>
+          {noShowingMsg}
+        </Typography>
+      )}
+
       {/* 查詢座位 */}
       <Button
         fullWidth
         variant="contained"
+        disabled={!selectedShowing}
         onClick={() => {
           if (!member) {
             setDialogMsg("請先登入會員才能訂票");
@@ -165,20 +216,12 @@ export default function QuickSearchPage() {
             return;
           }
 
-          if (!selectedShowing) {
-            alert("請選擇場次");
-            return;
-          }
-
           navigate("/mealselect", {
             state: {
               showing: selectedShowing,
-
-              // 🔑 跟 BookPage 一模一樣
               memberID: member.memberID,
               memberBalance: member.memberBalance,
               memberName: member.memberName,
-
               ticketCounts: { T00001: 1 },
               mealCounts: {},
               totalPrice: 0
